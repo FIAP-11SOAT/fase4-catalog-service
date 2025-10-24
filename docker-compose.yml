@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16-alpine
@@ -10,9 +8,11 @@ services:
       POSTGRES_PASSWORD: app_password
       POSTGRES_DB: catalogdb
     ports:
-      - "5432:5432"
+      - "55432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Executa arquivos .sql e .sql.gz apenas na primeira inicialização do volume
+      - ./migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app_user -d catalogdb"]
       interval: 5s

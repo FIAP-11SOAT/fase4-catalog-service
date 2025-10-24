@@ -11,7 +11,7 @@ Endpoints expostos:
 - DELETE `/categories/{id}` – Remove categoria (requer `X-Role: admin`)
 - GET `/health` – Healthcheck simples
 
-Observação: Implementação inicial usa armazenamento em memória para simplificar. É fácil trocar por um banco (ex.: SQLite/Postgres) depois.
+Observação: A API usa Postgres via SQLAlchemy e aplica o schema/dados iniciais a partir de arquivos SQL em `migrations/`.
 
 ## Rodando com Docker
 
@@ -41,7 +41,19 @@ Isso vai disponibilizar:
 - API: <http://localhost:8000>
 - Postgres: localhost:5432 (db: `catalogdb`, user: `app_user`, senha: `app_password`)
   
-Nota: o `docker-compose.yml` do projeto expõe o Postgres na porta host `5432` e cria o usuário `app_user` com senha `app_password` para o banco `catalogdb`.
+Nota: o `docker-compose.yml` mapeia a pasta `./migrations` para `/docker-entrypoint-initdb.d` no Postgres, portanto os arquivos `.sql` são executados automaticamente na PRIMEIRA inicialização do volume (quando o banco é criado do zero). As credenciais padrão são: user `app_user`, senha `app_password`, database `catalogdb`, exposto na porta host `55432`.
+
+### Migrations
+
+- Na primeira criação do volume do Postgres, os scripts em `migrations/*.sql` são executados automaticamente.
+- Se você alterar as migrations e quiser recriar tudo do zero, derrube os serviços removendo o volume e suba novamente:
+
+```cmd
+docker compose down -v
+docker compose up -d --build
+```
+
+- A aplicação também tenta executar os arquivos `.sql` de `migrations/` no startup (idempotente), o que ajuda em ambientes onde o volume já existe. Ainda assim, para garantir a aplicação de mudanças de schema, prefira recriar o volume quando modificar as migrations.
 
 Para ver logs:
 

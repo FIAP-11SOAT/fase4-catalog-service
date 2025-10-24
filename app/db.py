@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -28,5 +29,39 @@ def get_db():
 
 
 def init_db():
-    from . import models
+    """Initialize database schema and run SQL migrations.
+
+    This function keeps the existing SQLAlchemy model-based creation
+    (useful for dev) and, in addition, executes any .sql files found in
+    the project-level `migrations/` folder. The SQL scripts are written
+    to be idempotentes (create table if not exists, on conflict do nothing,
+    drop trigger if exists, etc), então é seguro executar em todo startup.
+    """
+    from . import models  # noqa: F401 - ensure models are imported for metadata
+
+    # 1) Cria objetos do SQLAlchemy (tabelas definidas em models.py)
     Base.metadata.create_all(bind=engine)
+
+    # 2) Executa migrations em SQL puro (se existirem)
+    try:
+        project_root = Path(__file__).resolve().parent.parent
+        migrations_dir = project_root / "migrations"
+        if migrations_dir.exists() and migrations_dir.is_dir():
+            sql_files = sorted(migrations_dir.glob("*.sql"))
+            if sql_files:
+                # Usa conexão bruta para permitir múltiplos statements por arquivo
+                raw_conn = engine.raw_connection()
+                try:
+                    raw_conn.autocommit = True
+                    cur = raw_conn.cursor()
+                    for sql_path in sql_files:
+                        with sql_path.open("r", encoding="utf-8") as f:
+                            script = f.read()
+                        # Executa o script completo; os .sql foram escritos para serem idempotentes
+                        cur.execute(script)
+                    cur.close()
+                finally:
+                    raw_conn.close()
+    except Exception as e:
+        # Em ambiente de dev, um print ajuda a diagnosticar; em prod use logging
+        print(f"[DB] Falha ao executar migrations SQL: {e}")
