@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feat/feature-catalog
+      - feat/catalog-service
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,8 @@ jobs:
       AWS_REGION: us-east-1
       TF_GH_OWNER: FIAP-11SOAT
       TF_GH_REPO: fase4-catalog-service
-      TF_GH_BRANCH: feat/feature-catalog
+      # Usa dinamicamente a branch que acionou o workflow para alinhar com o OIDC
+      TF_GH_BRANCH: ${{ github.ref_name }}
       ARTIFACT_KEY: releases/${{ github.sha }}.zip
 
     steps:
