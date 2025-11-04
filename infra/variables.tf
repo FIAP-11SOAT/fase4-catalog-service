@@ -103,9 +103,9 @@ variable "rds_allocated_storage" {
 }
 
 variable "rds_engine_version" {
-  description = "PostgreSQL engine version"
+  description = "PostgreSQL engine version. Deixe vazio para usar a versão padrão recomendada pela AWS (evita erros quando uma versão específica sai de linha). Exemplos suportados comuns: '16.4', '15.7'"
   type        = string
-  default     = "15.5"
+  default     = ""
 }
 
 variable "rds_multi_az" {
