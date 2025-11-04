@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Fase4 Catalog Service - FastAPI on AWS Lambda (HTTP API)
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+    Architectures:
+      - x86_64
+
+Resources:
+  CatalogApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: app.main.handler
+      Events:
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+        ApiRoot:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+      Environment:
+        Variables:
+          # Ajuste conforme seu ambiente (RDS, etc.)
+          DB_HOST: !Ref DbHost
+          DB_PORT: !Ref DbPort
+          DB_NAME: !Ref DbName
+          DB_USER: !Ref DbUser
+          DB_PASS: !Ref DbPass
+    Metadata:
+      BuildMethod: python311
+      BuildProperties:
+        # Usa requirements.app.txt para incluir SQLAlchemy e psycopg2 no pacote
+        RequirementsFile: requirements.app.txt
+
+Parameters:
+  DbHost:
+    Type: String
+    Default: localhost
+  DbPort:
+    Type: String
+    Default: '5432'
+  DbName:
+    Type: String
+    Default: postgres
+  DbUser:
+    Type: String
+    Default: postgres
+  DbPass:
+    Type: String
+    NoEcho: true
+    Default: postgres
+
+Outputs:
+  ApiUrl:
+    Description: HTTP API endpoint URL
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"

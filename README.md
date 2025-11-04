@@ -1,6 +1,6 @@
 # Catálogo Fase 4 – Microsserviço de Categorias (Python + FastAPI)
 
-Este repositório agora contém um microsserviço em Python que implementa o CRUD de categorias conforme o documento da Fase 4 e os handlers/rotas em Go no diretório `docs/`.
+Este repositório contém um microsserviço em Python que implementa o CRUD de categorias.
 
 Endpoints expostos:
 
@@ -13,110 +13,100 @@ Endpoints expostos:
 
 Observação: A API usa Postgres via SQLAlchemy e aplica o schema/dados iniciais a partir de arquivos SQL em `migrations/`.
 
-## Rodando com Docker
+## Rodando localmente (sem Docker)
 
-Foi adicionado um `Dockerfile` que usa apenas as dependências necessárias através do arquivo `requirements.app.txt` (evita os pacotes do Anaconda do `requirements.txt`).
+Recomendado para desenvolvimento rápido.
 
-Passos (Windows, cmd.exe):
+1. Crie e ative um virtualenv (Windows, cmd.exe):
 
-1. Build da imagem
-   - opcional
-   - docker build -t fase4-catalog:latest .
+```cmd
+py -3 -m venv .venv
+.\.venv\Scripts\activate
+```
 
-2. Executar o container
-   - opcional
-   - docker run --rm -p 8000:8000 fase4-catalog:latest
+1. Instale dependências mínimas (usado em produção / deploy):
 
-Após subir, a API ficará em: `http://localhost:8000`.
+```cmd
+.\.venv\Scripts\pip install -r requirements.app.txt
+```
 
-## Rodando com Docker Compose
+1. Configure a variável de conexão ao Postgres. Se quiser usar um Postgres local, informe a URL:
 
-Suba app + Postgres com um único comando:
+```cmd
+set DATABASE_URL=postgresql+psycopg2://usuario:senha@host:5432/nomebd
+```
 
-- opcional
-- docker compose up -d --build
+1. Rode a aplicação com Uvicorn:
 
-Isso vai disponibilizar:
+```cmd
+.\.venv\Scripts\python -m uvicorn app.main:app --reload
+```
 
-- API: <http://localhost:8000>
-- Postgres: localhost:5432 (db: `catalogdb`, user: `app_user`, senha: `app_password`)
-  
-Nota: o `docker-compose.yml` mapeia a pasta `./migrations` para `/docker-entrypoint-initdb.d` no Postgres, portanto os arquivos `.sql` são executados automaticamente na PRIMEIRA inicialização do volume (quando o banco é criado do zero). As credenciais padrão são: user `app_user`, senha `app_password`, database `catalogdb`, exposto na porta host `55432`.
+1. Teste o health:
+
+```cmd
+curl -s http://localhost:8000/health
+```
+
+Se quiser usar um Postgres em container só para o banco (opção): suba um Postgres com Docker separadamente e aponte `DATABASE_URL` para ele; mas o repositório **não** usa Docker para deploy — apenas para conveniência local se você desejar.
 
 ### Migrations
 
-- Na primeira criação do volume do Postgres, os scripts em `migrations/*.sql` são executados automaticamente.
-- Se você alterar as migrations e quiser recriar tudo do zero, derrube os serviços removendo o volume e suba novamente:
+- Os scripts em `migrations/*.sql` são aplicados automaticamente pela aplicação em startup (idempotente). Para garantir aplicação completa do schema, gerencie o banco ou recrie o schema conforme necessário.
+
+## Deploy na AWS (Terraform + Lambda ZIP)
+
+O deploy na AWS é feito via Terraform: a pipeline empacota dependências e código num `.zip`, envia para um bucket S3 de artefatos e configura a Lambda (runtime Python 3.11) apontando para esse artefato. Um API Gateway (HTTP API) faz proxy das requisições para a Lambda.
+
+Arquivos relevantes:
+
+- `infra/` – Terraform que cria o bucket de artefatos, role IAM, função Lambda (ZIP), API Gateway HTTP API, permissões e Log Group.
+- `.github/workflows/deploy.yml` – pipeline que empacota as dependências + código, carrega para S3 e aplica o Terraform.
+
+Pré-requisitos:
+
+1. AWS account e permissões adequadas para criar recursos.
+2. GitHub Actions com OIDC (recomendado) ou secrets AWS (alternativa menos segura).
+
+Setup rápido (push para `main`):
+
+1. Configure secrets no GitHub (Settings > Secrets and variables > Actions):
+   - `AWS_ROLE_TO_ASSUME` (ARN de uma role com permissões para o repo, se usar OIDC)
+   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`
+   - Opcional VPC: `VPC_SUBNET_IDS_CSV`, `VPC_SECURITY_GROUP_IDS_CSV`
+
+2. Faça push no branch configurado (`main`) ou dispare o workflow manualmente.
+
+3. O workflow fará:
+   - `terraform apply -target=aws_s3_bucket.artifacts -target=aws_s3_bucket_versioning.artifacts` para garantir o bucket
+   - empacotar dependências + app em `artifact.zip` e subir para S3 (key `releases/${sha}.zip`)
+   - aplicar Terraform com `artifact_key` e `artifact_object_version` para atualizar a Lambda
+
+4. Ao final, o job imprime `api_url` (endpoint do API Gateway). Teste:
 
 ```cmd
-docker compose down -v
-docker compose up -d --build
+curl -s https://SEU_API_URL/health
 ```
 
-- A aplicação também tenta executar os arquivos `.sql` de `migrations/` no startup (idempotente), o que ajuda em ambientes onde o volume já existe. Ainda assim, para garantir a aplicação de mudanças de schema, prefira recriar o volume quando modificar as migrations.
+Observações:
 
-Para ver logs:
-
-- opcional
-- docker compose logs -f
-
-Para parar e remover containers (mantendo os dados no volume `pgdata`):
-
-- opcional
-- docker compose down
-
-Variáveis de ambiente (BD Postgres):
-
-- `DATABASE_URL` (opcional, default local): `postgresql+psycopg2://usuario:senha@host:5432/nomebd`
-
-Exemplo (definindo a URL do BD no run):
-
-- opcional
-- docker run --rm -p 8000:8000 -e DATABASE_URL="postgresql+psycopg2://postgres:postgres@seu-host:5432/postgres" fase4-catalogo:latest
- - opcional
- - docker run --rm -p 8000:8000 -e DATABASE_URL="postgresql+psycopg2://app_user:app_password@host.docker.internal:5432/catalogdb" fase4-catalogo:latest
-
-Observação: ao rodar o container da aplicação isoladamente no Windows e querer conectar ao Postgres que está na máquina host, use `host.docker.internal` como hostname (ou a rede/host apropriada). Se estiver usando o Postgres em outro container na mesma rede (docker compose), prefira executar via `docker compose up`.
-
-Segurança: não comite senhas em texto plano no repositório. Para ambientes reais, use um arquivo `.env` (adicionado ao `.gitignore`) ou variáveis de ambiente no provedor/CI.
-
-## Exemplos de uso (via curl)
-
-Os comandos abaixo são apenas exemplos opcionais para testar localmente:
-
-1. Healthcheck
-   - opcional
-   - curl -s <http://localhost:8000/health>
-
-2. Listar categorias (vazio retorna 404 e [])
-   - opcional
-   - curl -i <http://localhost:8000/categories>
-
-3. Criar categoria (requer papel admin)
-   - opcional
-   - curl -i -X POST <http://localhost:8000/categories> -H "Content-Type: application/json" -H "X-Role: admin" -d "{\"name\": \"Lanches\"}"
-
-4. Buscar por ID
-   - opcional
-   - curl -i <http://localhost:8000/categories/1>
-
-5. Atualizar
-   - opcional
-   - curl -i -X PUT <http://localhost:8000/categories/1> -H "Content-Type: application/json" -H "X-Role: admin" -d "{\"name\": \"Bebidas\"}"
-
-6. Deletar
-   - opcional
-   - curl -i -X DELETE <http://localhost:8000/categories/1> -H "X-Role: admin"
+- A Lambda precisa conseguir acessar o banco (RDS). Em produção, associe a função a uma VPC com subnets e security groups que permitam acesso ao RDS.
+- O `requirements.app.txt` inclui `mangum`, `SQLAlchemy` e `psycopg2-binary`.
+- O Terraform por padrão usa estado local em `infra/terraform.tfstate`. Para equipes, recomendo configurar backend S3 + DynamoDB para lock.
 
 ## Estrutura relevante
 
-- `app/main.py` – FastAPI com CRUD de categorias
-- `Dockerfile` – Container da aplicação
-- `requirements.app.txt` – Dependências mínimas do container
-- `docs/` – Referência dos handlers/rotas em Go utilizados como base
+- `app/` – código da aplicação (FastAPI)
+- `infra/` – código Terraform para provisionamento na AWS
+- `requirements.app.txt` – dependências usadas no deploy da Lambda
 
-## Notas e próximos passos
+## Próximos passos sugeridos
 
-- Caso deseje persistência real, podemos adicionar SQLite/SQLAlchemy (ou Postgres) e um `docker-compose.yml` com banco.
-- A autorização foi simplificada via header `X-Role: admin` para espelhar o `RequireAdminRole()` utilizado em Go.
+- Configurar backend remoto do Terraform (S3 + DynamoDB)
+- Armazenar segredos sensíveis no AWS Secrets Manager e fazer a Lambda acessar via IAM
+- Se preferir, posso adicionar a criação da role OIDC via Terraform e um `backend.tf` para o estado remoto
+
+---
+
+Se quiser que eu remova fisicamente os arquivos Docker do repositório (git rm), eu posso fazer esse commit também — preferi deixar mensagens de deprecated nos arquivos por enquanto. Quer que eu os remova totalmente do repo?
 

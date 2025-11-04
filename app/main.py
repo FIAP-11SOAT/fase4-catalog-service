@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .db import init_db
 from .routes.categories import router as categories_router
+from mangum import Mangum
 
 app = FastAPI(title="Catalogo - Categories API", version="1.0.0")
 
@@ -23,4 +24,7 @@ app.add_middleware(
 @app.get("/health")
 def health():
 	return {"status": "ok"}
+
+# AWS Lambda handler (via Mangum)
+handler = Mangum(app)
 
