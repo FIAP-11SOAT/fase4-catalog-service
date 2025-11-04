@@ -157,6 +157,13 @@ variable "gh_branch" {
   default     = "main"
 }
 
+# Permite autorizar múltiplas branches para OIDC. Se vazio, usa apenas gh_branch.
+variable "gh_branches" {
+  description = "Lista de branches do GitHub Actions autorizadas a assumir a role via OIDC"
+  type        = list(string)
+  default     = []
+}
+
 variable "oidc_role_name" {
   description = "Nome da IAM Role a ser assumida pelo GitHub Actions via OIDC"
   type        = string

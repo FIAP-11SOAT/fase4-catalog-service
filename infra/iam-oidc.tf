@@ -16,6 +16,13 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 # IAM Role to be assumed by GitHub Actions
+locals {
+  # Se 'gh_branches' vier preenchido, autoriza todas; senão, só 'gh_branch'
+  gh_allowed_subs = length(var.gh_branches) > 0 ? [for b in var.gh_branches : "repo:${var.gh_owner}/${var.gh_repo}:ref:refs/heads/${b}"] : [
+    "repo:${var.gh_owner}/${var.gh_repo}:ref:refs/heads/${var.gh_branch}"
+  ]
+}
+
 resource "aws_iam_role" "github_actions" {
   name = var.oidc_role_name
 
@@ -33,8 +40,8 @@ resource "aws_iam_role" "github_actions" {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
           StringLike = {
-            # Restrict to this repo and branch
-            "token.actions.githubusercontent.com:sub" = "repo:${var.gh_owner}/${var.gh_repo}:ref:refs/heads/${var.gh_branch}"
+            # Restringe a este repo e às branches permitidas
+            "token.actions.githubusercontent.com:sub" = local.gh_allowed_subs
           }
         }
       }
