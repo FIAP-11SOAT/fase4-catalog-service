@@ -154,7 +154,7 @@ variable "gh_repo" {
 variable "gh_branch" {
   description = "Branch do GitHub Actions autorizado a assumir a role"
   type        = string
-  default     = "main"
+  default     = "feat/catalog-service"
 }
 
 # Permite autorizar múltiplas branches para OIDC. Se vazio, usa apenas gh_branch.
