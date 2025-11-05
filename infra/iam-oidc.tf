@@ -110,8 +110,9 @@ resource "aws_iam_policy" "github_actions_deploy" {
           "ec2:CreateSecurityGroup","ec2:DeleteSecurityGroup",
           "ec2:AuthorizeSecurityGroupIngress","ec2:AuthorizeSecurityGroupEgress",
           "ec2:RevokeSecurityGroupIngress","ec2:RevokeSecurityGroupEgress",
-          "ec2:CreateTags","ec2:DescribeVpcs","ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups","ec2:DescribeRouteTables"
+          "ec2:CreateTags",
+          "ec2:DescribeVpcs","ec2:DescribeSubnets","ec2:DescribeSecurityGroups","ec2:DescribeRouteTables",
+          "ec2:DescribeVpcAttribute","ec2:DescribeAccountAttributes"
         ],
         Resource = ["*"]
       },
