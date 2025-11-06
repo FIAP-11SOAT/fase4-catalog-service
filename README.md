@@ -48,7 +48,66 @@ curl http://localhost:8000/health
 
 ### Migrations
 
-Os scripts em `migrations/*.sql` são aplicados automaticamente pela aplicação em startup (idempotente).
+As migrations de banco de dados são executadas **automaticamente** quando a aplicação inicializa.
+
+#### Como funciona
+
+1. **Primeira requisição** após deploy → Lambda "cold start"
+2. **FastAPI startup event** → Executa `run_migrations()`
+3. **Migrations executadas** → Arquivos SQL em ordem alfabética
+4. **Aplicação pronta** → API disponível
+
+#### Estrutura
+
+```
+migrations/
+  └── 0001_create_product_categories.sql
+  └── 0002_add_new_feature.sql  (futuros)
+```
+
+Arquivos são executados em ordem numérica. Use prefixos como `0001_`, `0002_`, etc.
+
+#### Adicionar nova migration
+
+1. Crie arquivo SQL em `migrations/` com numeração sequencial:
+   ```
+   migrations/0002_add_new_table.sql
+   ```
+
+2. Escreva SQL idempotente (pode rodar múltiplas vezes):
+   ```sql
+   CREATE TABLE IF NOT EXISTS nova_tabela (
+       id BIGSERIAL PRIMARY KEY,
+       nome VARCHAR(100) NOT NULL
+   );
+   
+   -- Use ON CONFLICT para INSERTs
+   INSERT INTO nova_tabela (nome) VALUES ('Item 1')
+   ON CONFLICT (nome) DO NOTHING;
+   ```
+
+3. Commit e push:
+   ```bash
+   git add migrations/0002_add_new_table.sql
+   git commit -m "feat: add new table migration"
+   git push
+   ```
+
+4. **Deploy automático executa a migration!** ✨
+
+#### Monitoramento
+
+Ver logs no **CloudWatch Logs** → `/aws/lambda/fase4-catalog-service`:
+- `🚀 Starting database migrations...`
+- `📄 Running migration: 0001_xxx.sql`
+- `✅ Migration completed successfully`
+
+#### Características
+
+- ✅ **Automático**: Sem intervenção manual
+- ✅ **Idempotente**: Pode rodar múltiplas vezes
+- ✅ **Resiliente**: App inicia mesmo se migration falhar
+- ✅ **Logging**: Todas as operações no CloudWatch
 
 ## Deploy na AWS
 

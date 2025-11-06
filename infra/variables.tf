@@ -123,7 +123,7 @@ variable "rds_backup_retention_days" {
 variable "rds_publicly_accessible" {
   description = "Whether RDS should be publicly accessible"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "rds_deletion_protection" {

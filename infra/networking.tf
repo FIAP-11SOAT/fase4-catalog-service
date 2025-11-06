@@ -42,6 +42,16 @@ resource "aws_security_group" "rds_sg" {
     description     = "Allow Postgres from Lambda SG"
   }
 
+  # TEMPORARY: Allow public access for running migrations
+  # Remove this after initial setup
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Temporary public access for migrations"
+  }
+
   egress {
     from_port        = 0
     to_port          = 0
