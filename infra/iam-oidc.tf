@@ -61,16 +61,16 @@ resource "aws_iam_policy" "github_actions_deploy" {
       {
         Effect = "Allow",
         Action = [
-          "s3:CreateBucket","s3:PutBucketVersioning","s3:GetBucketVersioning",
-          "s3:ListAllMyBuckets","s3:ListBucket","s3:GetBucketLocation",
-          "s3:PutObject","s3:GetObject","s3:HeadObject"
+          "s3:CreateBucket", "s3:PutBucketVersioning", "s3:GetBucketVersioning",
+          "s3:ListAllMyBuckets", "s3:ListBucket", "s3:GetBucketLocation",
+          "s3:PutObject", "s3:GetObject", "s3:HeadObject"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "iam:CreateRole","iam:GetRole","iam:AttachRolePolicy","iam:PutRolePolicy"
+          "iam:CreateRole", "iam:GetRole", "iam:AttachRolePolicy", "iam:PutRolePolicy"
         ],
         Resource = ["*"]
       },
@@ -84,44 +84,44 @@ resource "aws_iam_policy" "github_actions_deploy" {
       {
         Effect = "Allow",
         Action = [
-          "lambda:CreateFunction","lambda:UpdateFunctionCode","lambda:UpdateFunctionConfiguration",
-          "lambda:GetFunction","lambda:ListFunctions","lambda:DeleteFunction",
-          "lambda:AddPermission","lambda:RemovePermission"
+          "lambda:CreateFunction", "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
+          "lambda:GetFunction", "lambda:ListFunctions", "lambda:DeleteFunction",
+          "lambda:AddPermission", "lambda:RemovePermission"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "logs:CreateLogGroup","logs:PutRetentionPolicy","logs:DescribeLogGroups"
+          "logs:CreateLogGroup", "logs:PutRetentionPolicy", "logs:DescribeLogGroups"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "apigateway:*","execute-api:Invoke"
+          "apigateway:*", "execute-api:Invoke"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "ec2:CreateSecurityGroup","ec2:DeleteSecurityGroup",
-          "ec2:AuthorizeSecurityGroupIngress","ec2:AuthorizeSecurityGroupEgress",
-          "ec2:RevokeSecurityGroupIngress","ec2:RevokeSecurityGroupEgress",
+          "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
           "ec2:CreateTags",
-          "ec2:DescribeVpcs","ec2:DescribeSubnets","ec2:DescribeSecurityGroups","ec2:DescribeRouteTables",
-          "ec2:DescribeVpcAttribute","ec2:DescribeAccountAttributes"
+          "ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeSecurityGroups", "ec2:DescribeRouteTables",
+          "ec2:DescribeVpcAttribute", "ec2:DescribeAccountAttributes"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "rds:CreateDBInstance","rds:DeleteDBInstance","rds:ModifyDBInstance","rds:DescribeDBInstances",
-          "rds:ListTagsForResource","rds:AddTagsToResource",
-          "rds:CreateDBSubnetGroup","rds:DeleteDBSubnetGroup","rds:ModifyDBSubnetGroup","rds:DescribeDBSubnetGroups"
+          "rds:CreateDBInstance", "rds:DeleteDBInstance", "rds:ModifyDBInstance", "rds:DescribeDBInstances",
+          "rds:ListTagsForResource", "rds:AddTagsToResource",
+          "rds:CreateDBSubnetGroup", "rds:DeleteDBSubnetGroup", "rds:ModifyDBSubnetGroup", "rds:DescribeDBSubnetGroups"
         ],
         Resource = ["*"]
       }

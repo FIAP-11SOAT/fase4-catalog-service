@@ -11,13 +11,13 @@ variable "project_name" {
 }
 
 variable "artifact_key" {
-  description = "S3 object key (path) do pacote .zip a ser implantado na Lambda (ex.: releases/commit-sha.zip ou apenas commit-sha.zip)"
+  description = "S3 object key (path) do pacote .zip a ser implantado na Lambda (ex.: releases/commit-sha.zip)"
   type        = string
   default     = ""
 }
 
 variable "artifact_object_version" {
-  description = "Versão do objeto S3 (se bucket com versioning habilitado). Opcional, mas recomendado para implantações reprodutíveis."
+  description = "Versão do objeto S3 (se bucket com versioning habilitado)"
   type        = string
   default     = ""
 }

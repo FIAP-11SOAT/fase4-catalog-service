@@ -69,8 +69,8 @@ resource "aws_lambda_function" "app" {
   timeout       = var.timeout
 
   # Código a partir de artefato no S3 (gerado pelo pipeline)
-  s3_bucket = aws_s3_bucket.artifacts.bucket
-  s3_key    = var.artifact_key
+  s3_bucket         = aws_s3_bucket.artifacts.bucket
+  s3_key            = var.artifact_key
   s3_object_version = var.artifact_object_version != "" ? var.artifact_object_version : null
 
   environment {

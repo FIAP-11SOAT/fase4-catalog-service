@@ -17,8 +17,6 @@ jobs:
     env:
       PROJECT_NAME: fase4-catalog-service
       AWS_REGION: us-east-1
-      # Usa dinamicamente a branch que acionou o workflow para alinhar com o OIDC
-      TF_GH_BRANCH: ${{ github.ref_name }}
       ARTIFACT_KEY: releases/${{ github.sha }}.zip
 
     steps:
@@ -43,46 +41,42 @@ jobs:
 
       - name: Get AWS Account ID
         id: acct
-        shell: bash
         run: echo "account=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
 
       - name: Build Lambda package
-        shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.app.txt -t build
-          mkdir -p build/app
-          cp -R app/* build/app/
-          cd build
-          zip -r ../package.zip .
+          pip install -r requirements.app.txt -t build/package
+          cp -R app build/package/
+          cp -R migrations build/package/
+          cd build/package
+          zip -r ../../lambda-package.zip .
 
       - name: Compute artifacts bucket name
         id: bucket
-        shell: bash
         run: |
           NAME=$(echo "${PROJECT_NAME}" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
           echo "bucket=${NAME}-${{ steps.acct.outputs.account }}-${AWS_REGION}-artifacts" >> $GITHUB_OUTPUT
 
       - name: Upload artifact to S3
         id: upload
-        shell: bash
         run: |
-          VERSION_ID=$(aws s3api put-object --bucket "${{ steps.bucket.outputs.bucket }}" --key "${ARTIFACT_KEY}" --body package.zip --query 'VersionId' --output text)
+          VERSION_ID=$(aws s3api put-object \
+            --bucket "${{ steps.bucket.outputs.bucket }}" \
+            --key "${ARTIFACT_KEY}" \
+            --body lambda-package.zip \
+            --query 'VersionId' \
+            --output text)
           echo "version=${VERSION_ID}" >> $GITHUB_OUTPUT
 
       - name: Terraform Init
         working-directory: infra
-        shell: bash
         run: terraform init -input=false
 
       - name: Terraform Apply
         working-directory: infra
-        shell: bash
         env:
           TF_VAR_aws_region: ${{ env.AWS_REGION }}
           TF_VAR_artifact_key: ${{ env.ARTIFACT_KEY }}
           TF_VAR_artifact_object_version: ${{ steps.upload.outputs.version }}
-          TF_VAR_gh_owner: ${{ env.TF_GH_OWNER }}
-          TF_VAR_gh_repo: ${{ env.TF_GH_REPO }}
-          TF_VAR_gh_branch: ${{ env.TF_GH_BRANCH }}
         run: terraform apply -auto-approve -input=false
