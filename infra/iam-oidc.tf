@@ -124,6 +124,15 @@ resource "aws_iam_policy" "github_actions_deploy" {
           "rds:CreateDBSubnetGroup", "rds:DeleteDBSubnetGroup", "rds:ModifyDBSubnetGroup", "rds:DescribeDBSubnetGroups"
         ],
         Resource = ["*"]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:DescribeTable", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"
+        ],
+        Resource = [
+          "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/terraform-state-lock"
+        ]
       }
     ]
   })
