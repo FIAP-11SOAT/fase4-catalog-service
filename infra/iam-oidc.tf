@@ -63,14 +63,15 @@ resource "aws_iam_policy" "github_actions_deploy" {
         Action = [
           "s3:CreateBucket", "s3:PutBucketVersioning", "s3:GetBucketVersioning",
           "s3:ListAllMyBuckets", "s3:ListBucket", "s3:GetBucketLocation",
-          "s3:PutObject", "s3:GetObject", "s3:HeadObject"
+          "s3:PutObject", "s3:GetObject", "s3:HeadObject", "s3:Get*", "s3:List*", "s3:Put*"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "iam:CreateRole", "iam:GetRole", "iam:AttachRolePolicy", "iam:PutRolePolicy"
+          "iam:Get*", "iam:List*", "iam:CreateRole", "iam:GetRole", "iam:AttachRolePolicy",
+          "iam:PutRolePolicy", "iam:CreatePolicy", "iam:PassRole"
         ],
         Resource = ["*"]
       },
@@ -86,14 +87,14 @@ resource "aws_iam_policy" "github_actions_deploy" {
         Action = [
           "lambda:CreateFunction", "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
           "lambda:GetFunction", "lambda:ListFunctions", "lambda:DeleteFunction",
-          "lambda:AddPermission", "lambda:RemovePermission"
+          "lambda:AddPermission", "lambda:RemovePermission", "lambda:*"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "logs:CreateLogGroup", "logs:PutRetentionPolicy", "logs:DescribeLogGroups"
+          "logs:CreateLogGroup", "logs:PutRetentionPolicy", "logs:DescribeLogGroups", "logs:*"
         ],
         Resource = ["*"]
       },
@@ -107,21 +108,26 @@ resource "aws_iam_policy" "github_actions_deploy" {
       {
         Effect = "Allow",
         Action = [
-          "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
-          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
-          "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
-          "ec2:CreateTags",
-          "ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeSecurityGroups", "ec2:DescribeRouteTables",
-          "ec2:DescribeVpcAttribute", "ec2:DescribeAccountAttributes"
+          "cloudwatch:*"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "rds:CreateDBInstance", "rds:DeleteDBInstance", "rds:ModifyDBInstance", "rds:DescribeDBInstances",
-          "rds:ListTagsForResource", "rds:AddTagsToResource",
-          "rds:CreateDBSubnetGroup", "rds:DeleteDBSubnetGroup", "rds:ModifyDBSubnetGroup", "rds:DescribeDBSubnetGroups"
+          "rds:*"
+        ],
+        Resource = ["*"]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+          "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
+          "ec2:CreateTags",
+          "ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeSecurityGroups", "ec2:DescribeRouteTables",
+          "ec2:DescribeVpcAttribute", "ec2:DescribeAccountAttributes", "ec2:Describe*"
         ],
         Resource = ["*"]
       },
