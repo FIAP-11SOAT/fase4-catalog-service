@@ -34,25 +34,7 @@ jobs:
       #   DB_URL  -> jdbc:postgresql://HOST:5432/NOMEDB
       #   DB_USER -> usuário do banco
       #   DB_PASS -> senha do banco
-      - name: Flyway Migrate
-        run: |
-          set -e
-          FLYWAY_VERSION=10.18.0
-          echo "Baixando Flyway ${FLYWAY_VERSION}..."
-          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}-linux-x64.tar.gz -o flyway.tar.gz
-          tar -xzf flyway.tar.gz
-          sudo mv flyway-${FLYWAY_VERSION} /opt/flyway
-          export PATH="/opt/flyway:$PATH"
-          echo "Executando flyway migrate..."
-          flyway \
-            -url="${{ secrets.DB_URL }}" \
-            -user="${{ secrets.DB_USER }}" \
-            -password="${{ secrets.DB_PASS }}" \
-            -locations="filesystem:./sql" \
-            -cleanDisabled=true \
-            -validateMigrationNaming=true \
-            migrate
-          echo "Flyway concluído"
+      # (REMOVIDO) Flyway antes de criar RDS. Agora será executado após Terraform Apply.
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -107,3 +89,40 @@ jobs:
           TF_VAR_artifact_key: ${{ env.ARTIFACT_KEY }}
           TF_VAR_artifact_object_version: ${{ steps.upload.outputs.version }}
         run: terraform apply -auto-approve -input=false
+
+      - name: Flyway Migrate (post infra)
+        env:
+          DB_NAME: postgres
+        run: |
+          set -e
+          echo "Obtendo endpoint do RDS via terraform output..."
+          RDS_ENDPOINT=$(terraform -chdir=infra output -raw rds_endpoint)
+          RDS_PORT=$(terraform -chdir=infra output -raw rds_port)
+          echo "RDS_ENDPOINT=${RDS_ENDPOINT}"
+          FLYWAY_VERSION=10.18.0
+          echo "Baixando Flyway ${FLYWAY_VERSION}..."
+          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}-linux-x64.tar.gz -o flyway.tar.gz
+          tar -xzf flyway.tar.gz
+          mv flyway-${FLYWAY_VERSION} flyway
+          export PATH="${PWD}/flyway:$PATH"
+          DB_USER=postgres
+          DB_PASS=postgres
+          JDBC_URL="jdbc:postgresql://${RDS_ENDPOINT}:${RDS_PORT}/${DB_NAME}"
+          echo "Testando conexão (SELECT 1)..."
+          if ! command -v psql >/dev/null 2>&1; then
+            echo "Instalando psql (postgresql-client)..."
+            sudo apt-get update -y && sudo apt-get install -y postgresql-client >/dev/null
+          fi
+          PGPASSWORD="${DB_PASS}" psql "host=${RDS_ENDPOINT} port=${RDS_PORT} user=${DB_USER} dbname=${DB_NAME} sslmode=require" -c "select 1;" || { echo "Conexão falhou"; exit 1; }
+          echo "Executando flyway migrate..."
+          flyway \
+            -url="${JDBC_URL}" \
+            -user="${DB_USER}" \
+            -password="${DB_PASS}" \
+            -locations="filesystem:./sql" \
+            -cleanDisabled=true \
+            -baselineOnMigrate=true \
+            -validateMigrationNaming=true \
+            -outOfOrder=false \
+            migrate
+          echo "Flyway concluído"
