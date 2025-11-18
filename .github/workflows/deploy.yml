@@ -121,7 +121,6 @@ jobs:
             -password="${DB_PASS}" \
             -locations="filesystem:./sql" \
             -cleanDisabled=true \
-            -baselineOnMigrate=true \
             -validateMigrationNaming=true \
             -outOfOrder=false \
             migrate
