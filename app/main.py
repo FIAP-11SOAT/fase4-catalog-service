@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db import init_db
 from .routes.categories import router as categories_router
 from .routes.products import router as products_router
-from .migrations import run_migrations
 from mangum import Mangum
 import logging
 
@@ -17,7 +16,6 @@ app = FastAPI(title="Catalogo - Categories API", version="1.0.0")
 def on_startup():
 	logger.info("🚀 Application starting up...")
 	init_db()
-	run_migrations()
 	logger.info("✅ Application ready!")
 
 app.include_router(categories_router)

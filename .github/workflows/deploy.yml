@@ -28,6 +28,32 @@ jobs:
         with:
           python-version: '3.11'
 
+      # Rodar as migrações Flyway ANTES do deploy
+      # Instala o Flyway CLI localmente e executa "migrate"
+      # Secrets necessários:
+      #   DB_URL  -> jdbc:postgresql://HOST:5432/NOMEDB
+      #   DB_USER -> usuário do banco
+      #   DB_PASS -> senha do banco
+      - name: Flyway Migrate
+        run: |
+          set -e
+          FLYWAY_VERSION=10.18.0
+          echo "Baixando Flyway ${FLYWAY_VERSION}..."
+          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}-linux-x64.tar.gz -o flyway.tar.gz
+          tar -xzf flyway.tar.gz
+          sudo mv flyway-${FLYWAY_VERSION} /opt/flyway
+          export PATH="/opt/flyway:$PATH"
+          echo "Executando flyway migrate..."
+          flyway \
+            -url="${{ secrets.DB_URL }}" \
+            -user="${{ secrets.DB_USER }}" \
+            -password="${{ secrets.DB_PASS }}" \
+            -locations="filesystem:./sql" \
+            -cleanDisabled=true \
+            -validateMigrationNaming=true \
+            migrate
+          echo "Flyway concluído"
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -46,9 +72,10 @@ jobs:
       - name: Build Lambda package
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.app.txt -t build/package
+          # Dependências mínimas para a Lambda
+          pip install -r requirements.lambda.txt -t build/package
           cp -R app build/package/
-          cp -R migrations build/package/
+          # Migrations não são necessárias no pacote da Lambda (Flyway roda no pipeline)
           cd build/package
           zip -r ../../lambda-package.zip .
 
