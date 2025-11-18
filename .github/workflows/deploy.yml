@@ -114,6 +114,13 @@ jobs:
             sudo apt-get update -y && sudo apt-get install -y postgresql-client >/dev/null
           fi
           PGPASSWORD="${DB_PASS}" psql "host=${RDS_ENDPOINT} port=${RDS_PORT} user=${DB_USER} dbname=${DB_NAME} sslmode=require" -c "select 1;" || { echo "Conexão falhou"; exit 1; }
+          echo "Verificando estado do Flyway (histórico vs tabelas)..."
+          HAS_HISTORY=$(PGPASSWORD="${DB_PASS}" psql "host=${RDS_ENDPOINT} port=${RDS_PORT} user=${DB_USER} dbname=${DB_NAME} sslmode=require" -At -c "select exists (select 1 from information_schema.tables where table_schema='public' and table_name='flyway_schema_history');")
+          HAS_CATEGORIES=$(PGPASSWORD="${DB_PASS}" psql "host=${RDS_ENDPOINT} port=${RDS_PORT} user=${DB_USER} dbname=${DB_NAME} sslmode=require" -At -c "select coalesce(to_regclass('public.product_categories') is not null, false);")
+          if [ "$HAS_HISTORY" = "t" ] && [ "$HAS_CATEGORIES" = "f" ]; then
+            echo "Histórico do Flyway existe mas tabelas base não. Limpando apenas a tabela de histórico..."
+            PGPASSWORD="${DB_PASS}" psql "host=${RDS_ENDPOINT} port=${RDS_PORT} user=${DB_USER} dbname=${DB_NAME} sslmode=require" -c "drop table if exists public.flyway_schema_history;"
+          fi
           echo "Executando flyway migrate..."
           flyway \
             -url="${JDBC_URL}" \
