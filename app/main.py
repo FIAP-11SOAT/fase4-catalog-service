@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .db import init_db
 from .routes.categories import router as categories_router
 from .routes.products import router as products_router
 from mangum import Mangum
@@ -14,8 +13,7 @@ app = FastAPI(title="Catalogo - Categories API", version="1.0.0")
 
 @app.on_event("startup")
 def on_startup():
-	logger.info("🚀 Application starting up...")
-	init_db()
+	logger.info("🚀 Lambda FastAPI startup (migrations já aplicadas via Flyway CI/CD)...")
 	logger.info("✅ Application ready!")
 
 app.include_router(categories_router)

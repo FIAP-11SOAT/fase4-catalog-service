@@ -11,7 +11,7 @@ class Category(Base):
     name = Column(String(100), nullable=False, unique=True, index=True)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     # Relationship
     products = relationship("Product", back_populates="category")
@@ -28,7 +28,7 @@ class Product(Base):
     preparation_time = Column(Integer, nullable=False)
     category_id = Column(BigInteger, ForeignKey("product_categories.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     # Relationship
     category = relationship("Category", back_populates="products")
