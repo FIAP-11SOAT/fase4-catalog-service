@@ -35,11 +35,63 @@ resource "aws_s3_bucket" "artifacts" {
   bucket = lower(replace("${var.project_name}-${data.aws_caller_identity.current.account_id}-${var.aws_region}-artifacts", "_", "-"))
 }
 
+# Block public access at the account/bucket level
+resource "aws_s3_bucket_public_access_block" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 resource "aws_s3_bucket_versioning" "artifacts" {
   bucket = aws_s3_bucket.artifacts.id
   versioning_configuration {
     status = "Enabled"
   }
+}
+
+# Server access logging for S3 bucket
+resource "aws_s3_bucket" "artifacts_logs" {
+  bucket = lower(replace("${var.project_name}-${data.aws_caller_identity.current.account_id}-${var.aws_region}-artifacts-logs", "_", "-"))
+}
+
+resource "aws_s3_bucket_public_access_block" "artifacts_logs" {
+  bucket = aws_s3_bucket.artifacts_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_logging" "artifacts" {
+  bucket        = aws_s3_bucket.artifacts.id
+  target_bucket = aws_s3_bucket.artifacts_logs.id
+  target_prefix = "access-logs/"
+}
+
+# Enforce HTTPS-only access to artifacts bucket
+resource "aws_s3_bucket_policy" "artifacts_https_only" {
+  bucket = aws_s3_bucket.artifacts.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid      = "DenyInsecureTransport",
+        Effect   = "Deny",
+        Principal = "*",
+        Action   = "s3:*",
+        Resource = [
+          aws_s3_bucket.artifacts.arn,
+          "${aws_s3_bucket.artifacts.arn}/*"
+        ],
+        Condition = {
+          Bool = {"aws:SecureTransport" = false}
+        }
+      }
+    ]
+  })
 }
 
 locals {
@@ -122,6 +174,15 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
   auto_deploy = true
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.lambda.arn
+    format          = jsonencode({
+      requestId = "$context.requestId",
+      ip        = "$context.identity.sourceIp",
+      request   = "$context.httpMethod $context.path",
+      status    = "$context.status"
+    })
+  }
 }
 
 resource "aws_lambda_permission" "apigw_invoke" {

@@ -62,10 +62,13 @@ resource "aws_iam_policy" "github_actions_deploy" {
         Effect = "Allow",
         Action = [
           "s3:CreateBucket", "s3:PutBucketVersioning", "s3:GetBucketVersioning",
-          "s3:ListAllMyBuckets", "s3:ListBucket", "s3:GetBucketLocation",
-          "s3:PutObject", "s3:GetObject", "s3:HeadObject", "s3:Get*", "s3:List*", "s3:Put*"
+          "s3:GetBucketLocation", "s3:PutBucketPublicAccessBlock",
+          "s3:PutObject", "s3:GetObject", "s3:HeadObject", "s3:ListBucket"
         ],
-        Resource = ["*"]
+        Resource = [
+          "arn:aws:s3:::${var.project_name}-${data.aws_caller_identity.current.account_id}-${var.aws_region}-artifacts",
+          "arn:aws:s3:::${var.project_name}-${data.aws_caller_identity.current.account_id}-${var.aws_region}-artifacts/*"
+        ]
       },
       {
         Effect = "Allow",
@@ -86,36 +89,48 @@ resource "aws_iam_policy" "github_actions_deploy" {
         Effect = "Allow",
         Action = [
           "lambda:CreateFunction", "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
-          "lambda:GetFunction", "lambda:ListFunctions", "lambda:DeleteFunction",
-          "lambda:AddPermission", "lambda:RemovePermission", "lambda:*"
+          "lambda:GetFunction", "lambda:DeleteFunction", "lambda:AddPermission", "lambda:RemovePermission"
+        ],
+        Resource = [
+          "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.project_name}"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup", "logs:PutRetentionPolicy", "logs:DescribeLogGroups"
+        ],
+        Resource = [
+          "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${var.project_name}"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "apigateway:POST", "apigateway:PUT", "apigateway:GET", "apigateway:DELETE"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "logs:CreateLogGroup", "logs:PutRetentionPolicy", "logs:DescribeLogGroups", "logs:*"
+          "execute-api:Invoke"
+        ],
+        Resource = [
+          "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*/*/*/*"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "cloudwatch:GetMetricData", "cloudwatch:ListMetrics"
         ],
         Resource = ["*"]
       },
       {
         Effect = "Allow",
         Action = [
-          "apigateway:*", "execute-api:Invoke"
-        ],
-        Resource = ["*"]
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "cloudwatch:*"
-        ],
-        Resource = ["*"]
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "rds:*"
+          "rds:DescribeDBInstances", "rds:DescribeDBClusters"
         ],
         Resource = ["*"]
       },
@@ -127,7 +142,7 @@ resource "aws_iam_policy" "github_actions_deploy" {
           "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
           "ec2:CreateTags",
           "ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeSecurityGroups", "ec2:DescribeRouteTables",
-          "ec2:DescribeVpcAttribute", "ec2:DescribeAccountAttributes", "ec2:Describe*"
+          "ec2:DescribeVpcAttribute", "ec2:DescribeAccountAttributes"
         ],
         Resource = ["*"]
       },

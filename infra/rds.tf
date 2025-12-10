@@ -13,6 +13,7 @@ resource "aws_db_instance" "postgres" {
   engine_version    = var.rds_engine_version != "" ? var.rds_engine_version : null
   instance_class    = var.rds_instance_class
   allocated_storage = var.rds_allocated_storage
+  storage_encrypted = true
   db_name           = var.db_name
   username          = var.db_user
   password          = var.db_pass
