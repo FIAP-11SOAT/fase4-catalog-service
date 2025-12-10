@@ -13,7 +13,7 @@ app = FastAPI(title="Catalogo - Categories API", version="1.0.0")
 
 @app.on_event("startup")
 def on_startup():
-	logger.info("🚀 Lambda FastAPI startup (migrations já aplicadas via Flyway CI/CD)...")
+	logger.info("🚀 Lambda FastAPI startup (migrations já aplicadas)...")
 	logger.info("✅ Application ready!")
 
 app.include_router(categories_router)
