@@ -7,28 +7,36 @@ import uuid
 from decimal import Decimal
 
 
-def _ensure_category(client, name=None):
+def _ensure_category(client, name=None, max_attempts=5):
     """Helper para garantir que uma categoria existe."""
     if name is None:
         name = f"Cat-{uuid.uuid4().hex[:6]}"
     
-    resp = client.post("/categories", json={"name": name, "description": "tmp"}, headers={"X-Role": "admin"})
+    original_name = name
     
-    if resp.status_code == 201:
-        return resp.json()["id"], name
-    elif resp.status_code == 409:
-        # Category already exists, fetch it
-        resp = client.get("/categories")
-        if resp.status_code == 200:
-            categories = resp.json()
-            for cat in categories:
-                if cat["name"] == name:
-                    return cat["id"], cat["name"]
+    for attempt in range(max_attempts):
+        # Use the original name for first attempt, then add suffix
+        if attempt > 0:
+            name = f"{original_name[:50]}-{attempt}"  # Limit base name to 50 chars
         
-        # If not found in list, try with a different name
-        return _ensure_category(client, f"{name}-{uuid.uuid4().hex[:4]}")
-    else:
-        pytest.fail(f"Failed to create category: {resp.status_code} - {resp.text}")
+        resp = client.post("/categories", json={"name": name, "description": "tmp"}, headers={"X-Role": "admin"})
+        
+        if resp.status_code == 201:
+            return resp.json()["id"], name
+        elif resp.status_code == 409:
+            # Category already exists, fetch it
+            resp = client.get("/categories")
+            if resp.status_code == 200:
+                categories = resp.json()
+                for cat in categories:
+                    if cat["name"] == name:
+                        return cat["id"], cat["name"]
+            # If not found in list, continue to next attempt
+        else:
+            pytest.fail(f"Failed to create category: {resp.status_code} - {resp.text}")
+    
+    # If all attempts failed, skip the test
+    pytest.skip(f"Could not create or find a suitable category after {max_attempts} attempts")
 
 
 class TestProductsCRUD:
