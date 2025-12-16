@@ -6,8 +6,8 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_DB: catalog
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: default
+      POSTGRES_PASSWORD: default
     volumes:
       - db_data:/var/lib/postgresql/data
 
