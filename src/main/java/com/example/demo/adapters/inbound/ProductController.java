@@ -1,8 +1,11 @@
 package com.example.demo.adapters.inbound;
 
-import com.example.demo.adapters.outbound.repository.RepositoryPort;
+import com.example.demo.adapters.converter.ProductConverter;
+import com.example.demo.adapters.dto.ProductRequestDTO;
+import com.example.demo.adapters.dto.ProductResponseDTO;
 import com.example.demo.core.model.Product;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.demo.core.port.ProductServicePort;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,25 +15,25 @@ import java.util.List;
 @RequestMapping("/products")
 public class ProductController {
 
-    @Autowired
-    private final RepositoryPort repository;
+    private final ProductServicePort productService;
 
-    public ProductController(RepositoryPort repository) {
-        this.repository = repository;
+    public ProductController(ProductServicePort productService) {
+        this.productService = productService;
     }
 
     @GetMapping("")
-    public ResponseEntity<?> get(){
+    public ResponseEntity<?> getAll(@RequestParam(required = false) Long category){
         try {
-            List<Product> products = repository.findAll();
-            return ResponseEntity.ok(products);
+            List<Product> products = productService.getAll(category);
+            List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(products);
+            return ResponseEntity.ok(productsResponse);
         } catch (Exception e){
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 
-    @PostMapping("/")
-    public ResponseEntity<String> create(){
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable Long id){
         try {
             return ResponseEntity.ok("");
         } catch (Exception e){
@@ -38,18 +41,32 @@ public class ProductController {
         }
     }
 
-    @PutMapping("/")
-    public ResponseEntity<String> edit(){
+    @PostMapping("")
+    public ResponseEntity<?> create(@RequestBody @Valid ProductRequestDTO productRequestDTO){
         try {
-            return ResponseEntity.ok("");
+            Product product = productService.create(productRequestDTO);
+            List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(product));
+            return ResponseEntity.ok(productsResponse.getFirst());
         } catch (Exception e){
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 
-    @DeleteMapping("/")
-    public ResponseEntity<String> delete(){
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody @Valid ProductRequestDTO productRequestDTO){
         try {
+            Product productUpdated = productService.update(id, productRequestDTO);
+            List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(productUpdated));
+            return ResponseEntity.ok(productsResponse.getFirst());
+        } catch (Exception e){
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id){
+        try {
+            productService.delete(id);
             return ResponseEntity.ok("");
         } catch (Exception e){
             return ResponseEntity.internalServerError().body(e.getMessage());
