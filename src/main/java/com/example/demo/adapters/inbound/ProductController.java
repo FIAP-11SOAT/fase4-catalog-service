@@ -6,6 +6,7 @@ import com.example.demo.adapters.dto.ProductResponseDTO;
 import com.example.demo.core.model.Product;
 import com.example.demo.core.port.ProductServicePort;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,14 +23,10 @@ public class ProductController {
     }
 
     @GetMapping("")
-    public ResponseEntity<?> getAll(@RequestParam(required = false) Long category){
-        try {
-            List<Product> products = productService.getAll(category);
-            List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(products);
-            return ResponseEntity.ok(productsResponse);
-        } catch (Exception e){
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
+    public ResponseEntity<List<ProductResponseDTO>> getAll(@RequestParam(required = false) Long category){
+        List<Product> products = productService.getAll(category);
+        List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(products);
+        return ResponseEntity.ok(productsResponse);
     }
 
     @GetMapping("/{id}")
@@ -43,34 +40,22 @@ public class ProductController {
 
     @PostMapping("")
     public ResponseEntity<?> create(@RequestBody @Valid ProductRequestDTO productRequestDTO){
-        try {
-            Product product = productService.create(productRequestDTO);
-            List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(product));
-            return ResponseEntity.ok(productsResponse.getFirst());
-        } catch (Exception e){
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
+        Product product = productService.create(productRequestDTO);
+        List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(product));
+        return ResponseEntity.status(HttpStatus.CREATED).body(productsResponse.getFirst());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody @Valid ProductRequestDTO productRequestDTO){
-        try {
-            Product productUpdated = productService.update(id, productRequestDTO);
-            List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(productUpdated));
-            return ResponseEntity.ok(productsResponse.getFirst());
-        } catch (Exception e){
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
+        Product productUpdated = productService.update(id, productRequestDTO);
+        List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(productUpdated));
+        return ResponseEntity.ok(productsResponse.getFirst());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id){
-        try {
-            productService.delete(id);
-            return ResponseEntity.ok("");
-        } catch (Exception e){
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
+    public ResponseEntity<?> delete(@PathVariable Long id){
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

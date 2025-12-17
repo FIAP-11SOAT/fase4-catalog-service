@@ -6,6 +6,8 @@ import com.example.demo.core.model.Category;
 import com.example.demo.core.model.Product;
 import com.example.demo.core.port.CategoryServicePort;
 import com.example.demo.core.port.ProductServicePort;
+import com.example.demo.shared.exceptions.ErrorType;
+import com.example.demo.shared.exceptions.ExceptionUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -50,7 +52,7 @@ public class ProductService implements ProductServicePort {
         Category category = categoryService.getById(productRequestDTO.categoryId());
         Product product = getById(id);
         if (product == null){
-            throw new RuntimeException("O produto não existe");
+            throw ExceptionUtils.badRequest(ErrorType.PRODUCT_NOT_FOUND, null);
         }
         Product updatedProduct = updateProduct(product, productRequestDTO, category);
         return productRepository.save(updatedProduct);
