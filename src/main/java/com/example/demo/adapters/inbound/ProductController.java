@@ -31,11 +31,12 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id){
-        try {
-            return ResponseEntity.ok("");
-        } catch (Exception e){
-            return ResponseEntity.internalServerError().body(e.getMessage());
+        Product product = productService.getById(id);
+        if(product == null){
+            return ResponseEntity.noContent().build();
         }
+        List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(product));
+        return ResponseEntity.ok(productsResponse.getFirst());
     }
 
     @PostMapping("")
