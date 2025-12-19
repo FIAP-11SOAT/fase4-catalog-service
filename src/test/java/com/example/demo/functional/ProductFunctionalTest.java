@@ -1,0 +1,104 @@
+package com.example.demo.functional;
+
+import com.example.demo.adapters.dto.ProductRequestDTO;
+import com.example.demo.adapters.dto.ProductResponseDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
+class ProductFunctionalTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    void shouldListAllProducts() throws Exception {
+
+        // act
+        MvcResult result = mockMvc.perform(get("/products"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // arrange
+        String jsonResponse = result.getResponse().getContentAsString();
+
+        List<ProductResponseDTO> response =
+                objectMapper.readValue(
+                        jsonResponse,
+                        new TypeReference<List<ProductResponseDTO>>() {}
+                );
+
+        // assert
+        assertEquals(8, response.size());
+    }
+
+    @Test
+    void shouldListAllProductsByCategory() throws Exception {
+
+        // act
+        MvcResult result = mockMvc.perform(get("/products?category=4"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // arrange
+        String jsonResponse = result.getResponse().getContentAsString();
+
+        List<ProductResponseDTO> response =
+                objectMapper.readValue(
+                        jsonResponse,
+                        new TypeReference<List<ProductResponseDTO>>() {}
+                );
+
+        // assert
+        assertEquals(2, response.size());
+        assertEquals("Sobremesa", response.getFirst().category());
+    }
+
+    @Test
+    void shouldCreateProduct() throws Exception {
+        ProductRequestDTO request = new ProductRequestDTO(
+                "Sanduíche de pastrami",
+                "Pão italiano com pastrami e molho de ervas",
+                BigDecimal.valueOf(29.99),
+                "",
+                10,
+                1L
+        );
+        String jsonBody = objectMapper.writeValueAsString(request);
+
+        MvcResult result = mockMvc.perform(post("/products")
+                .contentType("application/json")
+                .content(jsonBody)
+        ).andExpect(status().isCreated()).andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+
+        ProductResponseDTO response =
+                objectMapper.readValue(
+                        jsonResponse,
+                        new TypeReference<ProductResponseDTO>() {}
+                );
+
+        assertEquals(9, response.id());
+    }
+}
