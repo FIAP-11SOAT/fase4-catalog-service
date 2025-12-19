@@ -93,6 +93,9 @@ Após a execução dos comandos acima, o **Catalog Service** estará disponível
 http://localhost:8080
 ```
 
+## Swagger UI
+👉 http://localhost:8080/swagger-ui.html
+
 ---
 
 ## Observações
