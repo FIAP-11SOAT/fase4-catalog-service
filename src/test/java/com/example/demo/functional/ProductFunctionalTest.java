@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-public class ProductFunctionalTest {
+class ProductFunctionalTest {
 
     @Autowired
     private MockMvc mockMvc;
