@@ -20,13 +20,9 @@ public class CategoryController {
     }
 
     @GetMapping("")
-    public ResponseEntity<?> get(){
-        try {
-            List<Category> categories = categoryService.getAll();
-            List<CategoryResponseDTO> categoryResponseDTOS = CategoryConverter.toResponseDTO(categories);
-            return ResponseEntity.ok(categoryResponseDTOS);
-        } catch (Exception e){
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
+    public ResponseEntity<List<CategoryResponseDTO>> get(){
+        List<Category> categories = categoryService.getAll();
+        List<CategoryResponseDTO> categoryResponseDTOS = CategoryConverter.toResponseDTO(categories);
+        return ResponseEntity.ok(categoryResponseDTOS);
     }
 }
