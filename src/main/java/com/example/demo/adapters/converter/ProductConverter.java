@@ -7,6 +7,9 @@ import java.util.List;
 
 public class ProductConverter {
 
+    private ProductConverter() {
+    }
+
     public static List<ProductResponseDTO> toResponseDTO(List<Product> products){
         return products.stream()
                 .map(product -> new ProductResponseDTO(

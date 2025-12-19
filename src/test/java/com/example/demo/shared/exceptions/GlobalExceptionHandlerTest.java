@@ -88,6 +88,9 @@ class GlobalExceptionHandlerTest {
 
     @SuppressWarnings("unused")
     private void dummyMethod(@Valid Object request) {
+        // Método intencionalmente vazio.
+        // Usado apenas para forçar a validação Bean Validation (@Valid)
+        // em contextos onde não há um endpoint ou método público.
     }
 
     /* =========================
