@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
@@ -23,10 +27,6 @@ class GlobalExceptionHandlerTest {
     void setUp() {
         handler = new GlobalExceptionHandler();
     }
-
-    /* =========================
-       APIException
-       ========================= */
 
     @Test
     void shouldHandleApiException() {
@@ -49,10 +49,6 @@ class GlobalExceptionHandlerTest {
         assertEquals(ErrorType.CATEGORY_NOT_FOUND.getCode(), body.getErrorCode());
         assertNotNull(body.getTimestamp());
     }
-
-    /* =========================
-       MethodArgumentNotValidException
-       ========================= */
 
     @Test
     void shouldHandleMethodArgumentNotValidException() throws Exception {
@@ -93,10 +89,6 @@ class GlobalExceptionHandlerTest {
         // em contextos onde não há um endpoint ou método público.
     }
 
-    /* =========================
-       NoHandlerFoundException
-       ========================= */
-
     @Test
     void shouldHandleNoHandlerFoundException() {
         NoHandlerFoundException exception =
@@ -120,9 +112,65 @@ class GlobalExceptionHandlerTest {
         assertNotNull(body.getTimestamp());
     }
 
-    /* =========================
-       Generic Exception
-       ========================= */
+    @Test
+    void shouldHandleAuthenticationException() {
+        AuthenticationException exception =
+                new BadCredentialsException("Invalid token");
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleAuthenticationException(exception);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+
+        ApiErrorResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals(401, body.getStatus());
+        assertEquals(ErrorType.UNAUTHORIZED.getMessage(), body.getError());
+        assertEquals("Invalid token", body.getMessage());
+        assertEquals(ErrorType.UNAUTHORIZED.getCode(), body.getErrorCode());
+        assertNotNull(body.getTimestamp());
+    }
+
+    @Test
+    void shouldHandleAccessDeniedException() {
+        AccessDeniedException exception =
+                new AccessDeniedException("Access is denied");
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleAuthenticationException(exception);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+
+        ApiErrorResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals(403, body.getStatus());
+        assertEquals(ErrorType.FORBIDDEN.getMessage(), body.getError());
+        assertEquals("Access is denied", body.getMessage());
+        assertEquals(ErrorType.FORBIDDEN.getCode(), body.getErrorCode());
+        assertNotNull(body.getTimestamp());
+    }
+
+    @Test
+    void shouldHandleAuthorizationDeniedException() {
+        AuthorizationDeniedException exception =
+                new AuthorizationDeniedException(
+                "Authorization denied",
+                () -> false
+        );
+
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleAuthenticationException(exception);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+
+        ApiErrorResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals(403, body.getStatus());
+        assertEquals(ErrorType.FORBIDDEN.getMessage(), body.getError());
+        assertEquals("Authorization denied", body.getMessage());
+        assertEquals(ErrorType.FORBIDDEN.getCode(), body.getErrorCode());
+        assertNotNull(body.getTimestamp());
+    }
 
     @Test
     void shouldHandleGenericException() {
