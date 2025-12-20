@@ -54,6 +54,37 @@ flyway -v
 ```
 
 ---
+## Configurando o script para gerar o token JWT
+
+No site https://mkjwk.org/ gere um par de chaves pública e privada utilizando a seguinte configuração:
+
+- **Key Size:** 2048
+- **Key Use:** Signature
+- **Algorithm:** RS256:RSA
+- **Key ID:** Specify (`local-dev-key`)
+- **Show X.509:** Yes
+
+No bloco **Public and Private Keypair**, copie o campo `n` (chave pública) e cole no arquivo `application-dev.properties` e `application-test.properties` , dentro da configuração `JWT_JWK`, no campo `n`.
+
+No bloco **Private Key (X.509 PEM Format)**, copie todo o conteúdo e crie um arquivo na raiz do projeto com o nome:
+
+```text
+private_key.pem
+```
+
+É importante que esse arquivo não seja versionado !
+
+Depois que a aplicação estiver rodando, você pode usar o script generate-jwt.sh para gerar os tokens com as roles desejadas para acessar as rotas autenticadas:
+
+ROLE: CUSTOMERS
+```bash
+./generate-jwt.sh CUSTOMERS
+```
+
+ROLE: EMPLOYEES
+```bash
+./generate-jwt.sh EMPLOYEES
+```
 
 ## Subindo o projeto localmente
 

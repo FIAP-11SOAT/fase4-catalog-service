@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
@@ -31,6 +32,7 @@ class CategoryControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnListOfCategories() throws Exception {
         // arrange
         OffsetDateTime createdAt = OffsetDateTime.of(
@@ -64,6 +66,7 @@ class CategoryControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnEmptyListWhenNoCategoriesExist() throws Exception {
         // arrange
         when(categoryService.getAll())

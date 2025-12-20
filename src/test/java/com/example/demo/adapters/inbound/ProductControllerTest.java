@@ -9,8 +9,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
+
+import org.springframework.security.test.context.support.WithMockUser;
+
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -21,10 +25,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
+@ActiveProfiles("test")
 class ProductControllerTest {
 
     @Autowired
@@ -69,11 +75,8 @@ class ProductControllerTest {
         );
     }
 
-    /* =========================
-       GET /products
-       ========================= */
-
     @Test
+    @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnAllProductsWithoutCategoryFilter() throws Exception {
         when(productService.getAll(null))
                 .thenReturn(List.of(buildProduct(1L)));
@@ -87,6 +90,7 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnProductsFilteredByCategory() throws Exception {
         when(productService.getAll(1L))
                 .thenReturn(List.of(buildProduct(1L)));
@@ -100,11 +104,8 @@ class ProductControllerTest {
         verify(productService).getAll(1L);
     }
 
-    /* =========================
-       GET /products/{id}
-       ========================= */
-
     @Test
+    @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnProductWhenFoundById() throws Exception {
         when(productService.getById(10L))
                 .thenReturn(buildProduct(10L));
@@ -118,6 +119,7 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnNoContentWhenProductNotFoundById() throws Exception {
         when(productService.getById(99L))
                 .thenReturn(null);
@@ -128,11 +130,8 @@ class ProductControllerTest {
         verify(productService).getById(99L);
     }
 
-    /* =========================
-       POST /products
-       ========================= */
-
     @Test
+    @WithMockUser(roles = "EMPLOYEES")
     void shouldCreateProduct() throws Exception {
         Product product = buildProduct(1L);
 
@@ -140,6 +139,7 @@ class ProductControllerTest {
                 .thenReturn(product);
 
         mockMvc.perform(post("/products")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequestDTO())))
                 .andExpect(status().isCreated())
@@ -149,11 +149,8 @@ class ProductControllerTest {
         verify(productService).create(any(ProductRequestDTO.class));
     }
 
-    /* =========================
-       PUT /products/{id}
-       ========================= */
-
     @Test
+    @WithMockUser(roles = "EMPLOYEES")
     void shouldUpdateProduct() throws Exception {
         Product updatedProduct = buildProduct(1L);
 
@@ -161,6 +158,7 @@ class ProductControllerTest {
                 .thenReturn(updatedProduct);
 
         mockMvc.perform(put("/products/{id}", 1L)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequestDTO())))
                 .andExpect(status().isOk())
@@ -170,13 +168,11 @@ class ProductControllerTest {
         verify(productService).update(eq(1L), any(ProductRequestDTO.class));
     }
 
-    /* =========================
-       DELETE /products/{id}
-       ========================= */
-
     @Test
+    @WithMockUser(roles = "EMPLOYEES")
     void shouldDeleteProduct() throws Exception {
-        mockMvc.perform(delete("/products/{id}", 5L))
+        mockMvc.perform(delete("/products/{id}", 5L)
+                .with(csrf()))
                 .andExpect(status().isNoContent());
 
         verify(productService).delete(5L);

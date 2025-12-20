@@ -7,6 +7,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -14,6 +15,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,13 +41,14 @@ public class CatalogStepDefs {
 
     @When("a GET request is sent to {string}")
     public void get_request_sent_to(String endpoint) throws Exception {
-        // usa o endpoint do cenário e o categoryId definido no Given
-        mvcResult = mockMvc.perform(get(endpoint + "?category=" + categoryId))
+        mvcResult = mockMvc.perform(
+                        get(endpoint + "?category=" + categoryId)
+                                .with(user("test-user").roles("CUSTOMERS"))
+                )
                 .andExpect(status().isOk())
                 .andReturn();
 
         String json = mvcResult.getResponse().getContentAsString();
-        // ajuste ProductResponse / tipo para o que sua API retorna
         products = objectMapper.readValue(
                 json,
                 new TypeReference<List<ProductResponseDTO>>() {}
