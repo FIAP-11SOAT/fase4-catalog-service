@@ -6,7 +6,9 @@ import lombok.Getter;
 public enum ErrorType {
 
     CATEGORY_NOT_FOUND(1, "category not found", "category does not exists"),
-    PRODUCT_NOT_FOUND(2, "product not found", "product does not exists");
+    PRODUCT_NOT_FOUND(2, "product not found", "product does not exists"),
+    UNAUTHORIZED(3, "unauthorized request", "unauthorized request"),
+    FORBIDDEN(4, "forbidden access", "forbidden access");
 
     private final int code;
     private final String name;

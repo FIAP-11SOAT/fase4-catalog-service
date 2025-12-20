@@ -2,10 +2,14 @@ package com.example.demo.shared.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
 
 import java.time.OffsetDateTime;
 
@@ -69,6 +73,31 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(response);
+    }
+
+    @ExceptionHandler({
+            AuthenticationException.class,
+            AccessDeniedException.class,
+            AuthorizationDeniedException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleAuthenticationException(Exception ex) {
+        ErrorType errorType = ErrorType.UNAUTHORIZED;
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        if (ex instanceof AccessDeniedException) {
+            errorType = ErrorType.FORBIDDEN;
+            status = HttpStatus.FORBIDDEN;
+        }
+
+        ApiErrorResponse response = ApiErrorResponse.builder()
+                .status(status.value())
+                .error(errorType.getMessage())
+                .message(ex.getMessage())
+                .errorCode(errorType.getCode())
+                .timestamp(OffsetDateTime.now())
+                .build();
+
+        return ResponseEntity.status(status).body(response);
     }
 
     /**

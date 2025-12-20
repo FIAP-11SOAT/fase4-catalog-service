@@ -51,3 +51,7 @@ backend-s3/terraform.tfstate
 backend-s3/terraform.tfstate.backup
 backend-s3/*.tfstate
 backend-s3/*.tfstate.*
+
+
+private_key.pem
+public_key.txt
