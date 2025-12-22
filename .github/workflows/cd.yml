@@ -18,15 +18,9 @@ jobs:
       TF_DIR: deploy/terraform
 
     steps:
-      # ============================
-      # 1. CHECKOUT
-      # ============================
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ============================
-      # 2. AWS CREDENTIALS (seu padrão)
-      # ============================
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -34,24 +28,25 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # ============================
-      # 3. OBTER ACCOUNT ID AWS (seu padrão)
-      # ============================
       - name: Get AWS Account ID
-        run: |
-          echo "AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
+        run: echo "AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
 
-      # ============================
-      # 4. TERRAFORM
-      # ============================
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.11.0
+          terraform_version: 1.9.5
+
+      - name: Download PostgreSQL Provider 🔧
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          mkdir -p .terraform/providers/registry.terraform.io/cyrilgdn/postgresql/1.21.8/linux_amd64/
+          curl -L https://github.com/cyrilgdn/terraform-provider-postgresql/releases/download/v1.21.8/terraform-provider-postgresql_1.21.8_linux_amd64.zip -o pg.zip
+          unzip pg.zip -d .terraform/providers/registry.terraform.io/cyrilgdn/postgresql/1.21.8/linux_amd64/
+          rm pg.zip
 
       - name: Terraform Init
         working-directory: ${{ env.TF_DIR }}
-        run: terraform init -input=false
+        run: terraform init -input=false -upgrade=false
 
       - name: Terraform Plan
         working-directory: ${{ env.TF_DIR }}
