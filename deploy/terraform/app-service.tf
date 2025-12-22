@@ -28,7 +28,7 @@ resource "aws_ecs_task_definition" "service_task" {
 
   # Combinações válidas Fargate (exemplo comum e barato)
   cpu    = "512" # 0.25 vCPU
-  memory = "1" # 512 MiB (mínimo para 256 cpu)
+  memory = "1024" # 512 MiB (mínimo para 256 cpu)
 
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn      = aws_iam_role.ecs_task_role.arn
@@ -55,7 +55,7 @@ resource "aws_ecs_task_definition" "service_task" {
         logDriver = "awslogs"
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.app_log_group.name
-          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-region"        = data.aws_region.current.region
           "awslogs-stream-prefix" = "ecs"
         }
       }
