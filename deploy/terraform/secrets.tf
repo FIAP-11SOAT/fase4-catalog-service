@@ -10,12 +10,12 @@ resource "aws_secretsmanager_secret" "secrets" {
 
 locals {
   prod_secrets = {
-    "spring.datasource.url"               = "jdbc:postgresql://prod-db-host:5432/prod_db"
-    "spring.datasource.username"          = "prod_user"
-    "spring.datasource.password"          = "prod_password"
+    "spring.datasource.url"               = "jdbc:postgresql://${local.aws_infra_secrets["RDS_HOST"]}:5432/${postgresql_database.app_db.name}"
+    "spring.datasource.username"          = postgresql_role.app_db_user.name
+    "spring.datasource.password"          = random_password.app_db_password.result
     "spring.datasource.driver-class-name" = "org.postgresql.Driver"
     "fase4.catalog.service.apigateway.url"  = "https://api.fase4.com"
-    "fase4.catalog.service.auth.jwk"        = ""
+    "fase4.catalog.service.auth.jwk"        = local.aws_infra_secrets["JWT_JWK"]
   }
 }
 

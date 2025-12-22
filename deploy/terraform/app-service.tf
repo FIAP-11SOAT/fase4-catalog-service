@@ -36,7 +36,7 @@ resource "aws_ecs_task_definition" "service_task" {
   container_definitions = jsonencode([
     {
       name      = "${local.project_name}-container"
-      image     = "${aws_ecr_repository.ecs_repository.repository_url}:latest" # ou use tag fixa!
+      image     = "${aws_ecr_repository.ecs_repository.repository_url}:${var.ecr_image_tag}",
       essential = true
 
       portMappings = [
@@ -47,7 +47,9 @@ resource "aws_ecs_task_definition" "service_task" {
         }
       ]
 
-      environment = [] # ou suas variáveis aqui
+      environment = [
+        { name = "SPRING_PROFILES_ACTIVE", value = "prod" } # ou suas variáveis aqui
+      ]
 
       logConfiguration = {
         logDriver = "awslogs"

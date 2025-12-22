@@ -14,7 +14,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 @Configuration
 public class JwtConfig {
 
-    @Value("${JWT_JWK}")
+    @Value("${fase4.catalog.service.auth.jwk}")
     private String jwkJson;
 
     @Bean

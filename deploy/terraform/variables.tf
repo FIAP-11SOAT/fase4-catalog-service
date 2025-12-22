@@ -23,6 +23,12 @@ locals {
   aws_infra_secrets  = jsondecode(data.aws_secretsmanager_secret_version.infra_secrets.secret_string)
 }
 
+variable "ecr_image_tag" {
+  type        = string
+  description = "Tag da imagem do ECR"
+  default     = "latest"
+}
+
 locals {
   aws_region   = "us-east-1"
   project_name = "fase4-catalog-service"
