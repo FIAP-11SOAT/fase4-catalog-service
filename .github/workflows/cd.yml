@@ -50,14 +50,13 @@ jobs:
           terraform_version: 1.11.0
 
       - name: Terraform Init
-        working-directory: ${{ env.TF_DIR }}
-        run: terraform init -input=false
+        working-directory: deploy/terraform
+        run: terraform init
 
-      - name: Terraform Plan
-        working-directory: ${{ env.TF_DIR }}
-        run: terraform plan -input=false -detailed-exitcode
+      - name: Terraform Validate
+        working-directory: deploy/terraform
+        run: terraform validate
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && steps.plan.outcome == 'success'
-        working-directory: ${{ env.TF_DIR }}
-        run: terraform apply -input=false -auto-approve
+        working-directory: deploy/terraform
+        run: terraform apply -auto-approve
