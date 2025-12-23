@@ -27,7 +27,6 @@ resource "aws_lb_listener_rule" "service_rule" {
     path_pattern {
       values = [
         "/categories*",
-        "/categories/*",
         "/products*",
         "/products/*",
         "/swagger-ui*",
