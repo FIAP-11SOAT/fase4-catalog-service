@@ -127,6 +127,30 @@ http://localhost:8080
 ## Swagger UI
 👉 http://localhost:8080/swagger-ui.html
 
+## Rotas da API
+
+⚠️ **Todas as rotas requerem autenticação via JWT**
+
+### 📌 Categorias
+
+- **GET** `/categories`  
+  👥 Roles permitidas:
+  - `EMPLOYEES`
+  - `CUSTOMERS`
+
+---
+
+### 📌 Produtos
+
+- **GET** `/products?category=1`  
+  👥 Roles permitidas:
+  - `EMPLOYEES`
+  - `CUSTOMERS`
+
+- **POST** `/products`  
+  👥 Roles permitidas:
+  - `EMPLOYEES`
+
 ---
 
 ## Observações
