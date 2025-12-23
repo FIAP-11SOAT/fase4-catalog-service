@@ -25,7 +25,15 @@ resource "aws_lb_listener_rule" "service_rule" {
   }
   condition {
     path_pattern {
-      values = ["/categories*", "/categories/*", "/products*", "/products/*", "/swagger-ui*"]
+      values = [
+        "/categories*",
+        "/categories/*",
+        "/products*",
+        "/products/*",
+        "/swagger-ui*",
+        "/v3/api-docs*",
+        "/v3/api-docs/*"
+      ]
     }
   }
 }
