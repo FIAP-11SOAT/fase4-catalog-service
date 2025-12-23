@@ -111,9 +111,16 @@ jobs:
           ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/fase4-catalog-service-ecr"
           docker push "$ECR_URL:$IMAGE_TAG"
 
+      - name: Export variable for Terraform
+        run: echo "TF_VAR_ecr_image_tag=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Terraform Apply (Update ECS)
+        working-directory: deploy/terraform
+        run: terraform apply -auto-approve
+
       - name: Force ECS new deployment
         run: |
           aws ecs update-service \
             --cluster fase4-infra-microservices-ecs-cluster \
-            --service fase4-catalog-service \
+            --service fase4-catalog-service-service \
             --force-new-deployment
