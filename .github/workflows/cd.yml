@@ -1,10 +1,10 @@
 name: Terraform Infra
 
 on:
-  push:
-    branches: [main]
-  # pull_request:
+  # push:
     # branches: [main]
+  pull_request:
+    branches: [main]
     paths:
       - 'deploy/terraform/**'
       - '.github/workflows/terraform-infra.yml'
@@ -18,15 +18,9 @@ jobs:
       TF_DIR: deploy/terraform
 
     steps:
-      # ============================
-      # 1. CHECKOUT
-      # ============================
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ============================
-      # 2. AWS CREDENTIALS (seu padrão)
-      # ============================
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -34,16 +28,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # ============================
-      # 3. OBTER ACCOUNT ID AWS (seu padrão)
-      # ============================
       - name: Get AWS Account ID
         run: |
           echo "AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
 
-      # ============================
-      # 4. TERRAFORM
-      # ============================
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -60,3 +48,72 @@ jobs:
       - name: Terraform Apply
         working-directory: deploy/terraform
         run: terraform apply -auto-approve
+
+      - name: Build Flyway env vars from Secrets Manager
+        run: |
+          SECRET_JSON=$(aws secretsmanager get-secret-value \
+            --secret-id fase4-catalog-service-secrets \
+            --query SecretString \
+            --output text)
+
+          JDBC_URL=$(echo "$SECRET_JSON" | jq -r '."spring.datasource.url"')
+          DB_USER=$(echo "$SECRET_JSON" | jq -r '."spring.datasource.username"')
+          DB_PASS=$(echo "$SECRET_JSON" | jq -r '."spring.datasource.password"')
+
+          echo "FLYWAY_URL=$JDBC_URL" >> $GITHUB_ENV
+          echo "FLYWAY_USER=$DB_USER" >> $GITHUB_ENV
+          echo "FLYWAY_PASSWORD=$DB_PASS" >> $GITHUB_ENV
+
+      - name: Set up JDK 21 (Flyway)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Flyway
+        run: |
+          curl -L https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/11.19.0/flyway-commandline-11.19.0-linux-x64.tar.gz | tar xvz
+          sudo ln -s $PWD/flyway-11.19.0/flyway /usr/local/bin/flyway
+
+      - name: Run Flyway Migrations
+        run: |
+          flyway \
+            -url="$FLYWAY_URL" \
+            -user="$FLYWAY_USER" \
+            -password="$FLYWAY_PASSWORD" \
+            -locations=filesystem:src/main/resources/db/migrations/postgres \
+            migrate
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build JAR
+        run: mvn clean package -DskipTests
+
+      - name: Build Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/fase4-catalog-service-ecr"
+          docker build -t catalog-service .
+          docker tag catalog-service:latest "$ECR_URL:$IMAGE_TAG"
+
+      - name: Push Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/fase4-catalog-service-ecr"
+          docker push "$ECR_URL:$IMAGE_TAG"
+
+      - name: Force ECS new deployment
+        run: |
+          aws ecs update-service \
+            --cluster fase4-infra-microservices-ecs-cluster \
+            --service fase4-catalog-service \
+            --force-new-deployment
