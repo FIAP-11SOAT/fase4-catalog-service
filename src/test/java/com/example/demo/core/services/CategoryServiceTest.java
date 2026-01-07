@@ -11,6 +11,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,11 +33,11 @@ class CategoryServiceTest {
     void shouldReturnAllCategories() {
         // arrange
         Category category1 = new Category();
-        category1.setId(1L);
+        category1.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         category1.setName("Lanches");
 
         Category category2 = new Category();
-        category2.setId(2L);
+        category2.setId(UUID.fromString("21111111-1111-1111-1111-111111111111"));
         category2.setName("Bebidas");
 
         when(categoryRepository.findAll())
@@ -58,33 +59,33 @@ class CategoryServiceTest {
     void shouldReturnCategoryWhenFoundById() {
         // arrange
         Category category = new Category();
-        category.setId(1L);
+        category.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         category.setName("Lanches");
 
-        when(categoryRepository.findById(1L))
+        when(categoryRepository.findById(UUID.fromString("11111111-1111-1111-1111-111111111111")))
                 .thenReturn(Optional.of(category));
 
         // act
-        Category result = service.getById(1L);
+        Category result = service.getById(UUID.fromString("11111111-1111-1111-1111-111111111111"));
 
         // assert
         assertNotNull(result);
-        assertEquals(1L, result.getId());
+        assertEquals(UUID.fromString("11111111-1111-1111-1111-111111111111"), result.getId());
         assertEquals("Lanches", result.getName());
 
-        verify(categoryRepository, times(1)).findById(1L);
+        verify(categoryRepository, times(1)).findById(UUID.fromString("11111111-1111-1111-1111-111111111111"));
     }
 
     @Test
     void shouldThrowExceptionWhenCategoryNotFound() {
         // arrange
-        when(categoryRepository.findById(99L))
+        when(categoryRepository.findById(UUID.fromString("91111111-1111-1111-1111-111111111111")))
                 .thenReturn(Optional.empty());
 
         // act + assert
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
-                () -> service.getById(99L)
+                () -> service.getById(UUID.fromString("91111111-1111-1111-1111-111111111111"))
         );
 
         assertEquals(
@@ -92,7 +93,7 @@ class CategoryServiceTest {
                 exception.getMessage()
         );
 
-        verify(categoryRepository, times(1)).findById(99L);
+        verify(categoryRepository, times(1)).findById(UUID.fromString("91111111-1111-1111-1111-111111111111"));
     }
 
 }

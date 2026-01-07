@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,7 +44,7 @@ class CategoryControllerTest {
         );
 
         Category category = new Category();
-        category.setId(1L);
+        category.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         category.setName("Lanches");
         category.setDescription("Categoria de lanches");
         category.setCreatedAt(createdAt);
@@ -58,7 +59,7 @@ class CategoryControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].id").value("11111111-1111-1111-1111-111111111111"))
                 .andExpect(jsonPath("$[0].name").value("Lanches"))
                 .andExpect(jsonPath("$[0].description").value("Categoria de lanches"))
                 .andExpect(jsonPath("$[0].createdAt").exists())

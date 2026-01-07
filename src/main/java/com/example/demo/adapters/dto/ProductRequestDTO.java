@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record ProductRequestDTO(
 
@@ -28,8 +29,7 @@ public record ProductRequestDTO(
         Integer preparationTime,
 
         @NotNull
-        @Positive
         @JsonProperty("category_id")
-        Long categoryId
+        UUID categoryId
 ) {
 }

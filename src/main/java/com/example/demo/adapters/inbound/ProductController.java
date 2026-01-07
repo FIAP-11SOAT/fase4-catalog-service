@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
@@ -28,7 +29,7 @@ public class ProductController {
 
     @PreAuthorize("hasAnyRole('CUSTOMERS', 'EMPLOYEES')")
     @GetMapping("")
-    public ResponseEntity<List<ProductResponseDTO>> getAll(@RequestParam(required = false) Long category){
+    public ResponseEntity<List<ProductResponseDTO>> getAll(@RequestParam(required = false) UUID category){
         List<Product> products = productService.getAll(category);
         List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(products);
         return ResponseEntity.ok(productsResponse);
@@ -36,7 +37,7 @@ public class ProductController {
 
     @PreAuthorize("hasAnyRole('CUSTOMERS', 'EMPLOYEES')")
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponseDTO> getById(@PathVariable Long id){
+    public ResponseEntity<ProductResponseDTO> getById(@PathVariable UUID id){
         Product product = productService.getById(id);
         if(product == null){
             return ResponseEntity.noContent().build();
@@ -63,7 +64,7 @@ public class ProductController {
     )
     @PreAuthorize("hasRole('EMPLOYEES')")
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ProductRequestDTO productRequestDTO){
+    public ResponseEntity<ProductResponseDTO> update(@PathVariable UUID id, @RequestBody @Valid ProductRequestDTO productRequestDTO){
         Product productUpdated = productService.update(id, productRequestDTO);
         List<ProductResponseDTO> productsResponse = ProductConverter.toResponseDTO(List.of(productUpdated));
         return ResponseEntity.ok(productsResponse.getFirst());
@@ -75,7 +76,7 @@ public class ProductController {
     )
     @PreAuthorize("hasRole('EMPLOYEES')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable UUID id){
         productService.delete(id);
         return ResponseEntity.noContent().build();
     }

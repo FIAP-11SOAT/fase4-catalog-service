@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class CategoryService implements CategoryServicePort {
@@ -25,7 +26,7 @@ public class CategoryService implements CategoryServicePort {
     }
 
     @Override
-    public Category getById(Long id) {
+    public Category getById(UUID id) {
         Optional<Category> category = categoryRepository.findById(id);
         if (category.isEmpty()){
             throw ExceptionUtils.badRequest(ErrorType.CATEGORY_NOT_FOUND, null);
