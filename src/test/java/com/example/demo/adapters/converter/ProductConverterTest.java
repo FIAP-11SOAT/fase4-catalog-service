@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,12 +26,12 @@ class ProductConverterTest {
         );
 
         Category category = new Category();
-        category.setId(1L);
+        category.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         category.setName("Lanches");
         category.setDescription("Categoria de lanches");
 
         Product product = new Product();
-        product.setId(10L);
+        product.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         product.setName("Hambúrguer");
         product.setDescription("Hambúrguer artesanal");
         product.setPrice(new BigDecimal("29.90"));
@@ -52,7 +53,7 @@ class ProductConverterTest {
 
         ProductResponseDTO dto = result.getFirst();
 
-        assertEquals(10L, dto.id());
+        assertEquals(UUID.fromString("11111111-1111-1111-1111-111111111111"), dto.id());
         assertEquals("Hambúrguer", dto.name());
         assertEquals("Hambúrguer artesanal", dto.description());
         assertEquals(new BigDecimal("29.90"), dto.price());

@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,9 +43,9 @@ class ProductControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Product buildProduct(Long id) {
+    private Product buildProduct(UUID id) {
         Category category = new Category();
-        category.setId(1L);
+        category.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         category.setName("Lanches");
 
         Product product = new Product();
@@ -71,7 +72,7 @@ class ProductControllerTest {
                 new BigDecimal("29.90"),
                 "https://cdn.app/burger.png",
                 15,
-                1L
+                UUID.fromString("11111111-1111-1111-1111-111111111111")
         );
     }
 
@@ -79,7 +80,7 @@ class ProductControllerTest {
     @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnAllProductsWithoutCategoryFilter() throws Exception {
         when(productService.getAll(null))
-                .thenReturn(List.of(buildProduct(1L)));
+                .thenReturn(List.of(buildProduct(UUID.fromString("11111111-1111-1111-1111-111111111111"))));
 
         mockMvc.perform(get("/products"))
                 .andExpect(status().isOk())
@@ -92,48 +93,48 @@ class ProductControllerTest {
     @Test
     @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnProductsFilteredByCategory() throws Exception {
-        when(productService.getAll(1L))
-                .thenReturn(List.of(buildProduct(1L)));
+        when(productService.getAll(UUID.fromString("11111111-1111-1111-1111-111111111111")))
+                .thenReturn(List.of(buildProduct(UUID.fromString("11111111-1111-1111-1111-111111111111"))));
 
         mockMvc.perform(get("/products")
-                        .param("category", "1"))
+                        .param("category", "11111111-1111-1111-1111-111111111111"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].category").value("Lanches"));
 
-        verify(productService).getAll(1L);
+        verify(productService).getAll(UUID.fromString("11111111-1111-1111-1111-111111111111"));
     }
 
     @Test
     @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnProductWhenFoundById() throws Exception {
-        when(productService.getById(10L))
-                .thenReturn(buildProduct(10L));
+        when(productService.getById(UUID.fromString("11111111-1111-1111-1111-111111111111")))
+                .thenReturn(buildProduct(UUID.fromString("11111111-1111-1111-1111-111111111111")));
 
-        mockMvc.perform(get("/products/{id}", 10L))
+        mockMvc.perform(get("/products/{id}", UUID.fromString("11111111-1111-1111-1111-111111111111")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.id").value("11111111-1111-1111-1111-111111111111"))
                 .andExpect(jsonPath("$.name").value("Hambúrguer"));
 
-        verify(productService).getById(10L);
+        verify(productService).getById(UUID.fromString("11111111-1111-1111-1111-111111111111"));
     }
 
     @Test
     @WithMockUser(roles = "CUSTOMERS")
     void shouldReturnNoContentWhenProductNotFoundById() throws Exception {
-        when(productService.getById(99L))
+        when(productService.getById(UUID.fromString("91111111-1111-1111-1111-111111111111")))
                 .thenReturn(null);
 
-        mockMvc.perform(get("/products/{id}", 99L))
+        mockMvc.perform(get("/products/{id}", UUID.fromString("91111111-1111-1111-1111-111111111111")))
                 .andExpect(status().isNoContent());
 
-        verify(productService).getById(99L);
+        verify(productService).getById(UUID.fromString("91111111-1111-1111-1111-111111111111"));
     }
 
     @Test
     @WithMockUser(roles = "EMPLOYEES")
     void shouldCreateProduct() throws Exception {
-        Product product = buildProduct(1L);
+        Product product = buildProduct(UUID.fromString("11111111-1111-1111-1111-111111111111"));
 
         when(productService.create(any(ProductRequestDTO.class)))
                 .thenReturn(product);
@@ -143,7 +144,7 @@ class ProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequestDTO())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").value("11111111-1111-1111-1111-111111111111"))
                 .andExpect(jsonPath("$.name").value("Hambúrguer"));
 
         verify(productService).create(any(ProductRequestDTO.class));
@@ -152,29 +153,29 @@ class ProductControllerTest {
     @Test
     @WithMockUser(roles = "EMPLOYEES")
     void shouldUpdateProduct() throws Exception {
-        Product updatedProduct = buildProduct(1L);
+        Product updatedProduct = buildProduct(UUID.fromString("91111111-1111-1111-1111-111111111111"));
 
-        when(productService.update(eq(1L), any(ProductRequestDTO.class)))
+        when(productService.update(eq(UUID.fromString("91111111-1111-1111-1111-111111111111")), any(ProductRequestDTO.class)))
                 .thenReturn(updatedProduct);
 
-        mockMvc.perform(put("/products/{id}", 1L)
+        mockMvc.perform(put("/products/{id}", UUID.fromString("91111111-1111-1111-1111-111111111111"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequestDTO())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").value("91111111-1111-1111-1111-111111111111"))
                 .andExpect(jsonPath("$.name").value("Hambúrguer"));
 
-        verify(productService).update(eq(1L), any(ProductRequestDTO.class));
+        verify(productService).update(eq(UUID.fromString("91111111-1111-1111-1111-111111111111")), any(ProductRequestDTO.class));
     }
 
     @Test
     @WithMockUser(roles = "EMPLOYEES")
     void shouldDeleteProduct() throws Exception {
-        mockMvc.perform(delete("/products/{id}", 5L)
+        mockMvc.perform(delete("/products/{id}", UUID.fromString("51111111-1111-1111-1111-111111111111"))
                 .with(csrf()))
                 .andExpect(status().isNoContent());
 
-        verify(productService).delete(5L);
+        verify(productService).delete(UUID.fromString("51111111-1111-1111-1111-111111111111"));
     }
 }

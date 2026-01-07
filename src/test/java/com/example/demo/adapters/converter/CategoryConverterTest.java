@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,7 +24,7 @@ class CategoryConverterTest {
         );
 
         Category category = new Category();
-        category.setId(1L);
+        category.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         category.setName("Sobremesa");
         category.setDescription("Doces e sobremesas");
         category.setCreatedAt(createdAt);
@@ -40,7 +41,7 @@ class CategoryConverterTest {
         assertEquals(1, result.size());
 
         CategoryResponseDTO dto = result.getFirst();
-        assertEquals(1L, dto.id());
+        assertEquals(UUID.fromString("11111111-1111-1111-1111-111111111111"), dto.id());
         assertEquals("Sobremesa", dto.name());
         assertEquals("Doces e sobremesas", dto.description());
         assertEquals(createdAt, dto.createdAt());

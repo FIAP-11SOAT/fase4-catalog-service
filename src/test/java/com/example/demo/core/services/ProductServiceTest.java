@@ -15,6 +15,7 @@ import org.mockito.MockitoAnnotations;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -39,11 +40,11 @@ class ProductServiceTest {
     void shouldReturnAllProductsWhenCategoryIdIsNull() {
         // arrange
         Product product1 = new Product();
-        product1.setId(1L);
+        product1.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         product1.setName("Pizza");
 
         Product product2 = new Product();
-        product2.setId(2L);
+        product2.setId(UUID.fromString("22222222-2222-2222-2222-222222222222"));
         product2.setName("Hambúrguer");
 
         when(productRepository.findAll())
@@ -63,65 +64,73 @@ class ProductServiceTest {
     void shouldReturnProductsByCategoryWhenCategoryIdIsProvided() {
         // arrange
         Category category = new Category();
-        category.setId(1L);
+        category.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         category.setName("Lanches");
 
         Product product = new Product();
-        product.setId(1L);
+        product.setId(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
         product.setCategory(category);
 
-        when(categoryService.getById(1L))
+        UUID categoryId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        when(categoryService.getById(categoryId))
                 .thenReturn(category);
         when(productRepository.findByCategory(category))
                 .thenReturn(List.of(product));
 
         // act
-        List<Product> result = service.getAll(1L);
+        List<Product> result = service.getAll(categoryId);
 
         // assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(categoryService, times(1)).getById(1L);
+        verify(categoryService, times(1)).getById(categoryId);
         verify(productRepository, times(1)).findByCategory(category);
     }
 
     @Test
     void shouldReturnProductWhenFoundById() {
         // arrange
-        Product product = new Product();
-        product.setId(10L);
+        UUID productId = UUID.fromString("10101010-1010-1010-1010-101010101010");
 
-        when(productRepository.findById(10L))
+        Product product = new Product();
+        product.setId(productId);
+
+        when(productRepository.findById(productId))
                 .thenReturn(Optional.of(product));
 
         // act
-        Product result = service.getById(10L);
+        Product result = service.getById(productId);
 
         // assert
         assertNotNull(result);
-        assertEquals(10L, result.getId());
-        verify(productRepository, times(1)).findById(10L);
+        assertEquals(productId, result.getId());
+        verify(productRepository, times(1)).findById(productId);
     }
 
     @Test
     void shouldReturnNullWhenProductNotFoundById() {
         // arrange
-        when(productRepository.findById(99L))
+        UUID productId = UUID.fromString("99999999-9999-9999-9999-999999999999");
+
+        when(productRepository.findById(productId))
                 .thenReturn(Optional.empty());
 
         // act
-        Product result = service.getById(99L);
+        Product result = service.getById(productId);
 
         // assert
         assertNull(result);
-        verify(productRepository, times(1)).findById(99L);
+        verify(productRepository, times(1)).findById(productId);
     }
 
     @Test
     void shouldCreateProductSuccessfully() {
         // arrange
+        UUID categoryId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
         Category category = new Category();
-        category.setId(1L);
+        category.setId(categoryId);
 
         ProductRequestDTO dto = new ProductRequestDTO(
                 " Pizza ",
@@ -129,10 +138,10 @@ class ProductServiceTest {
                 new BigDecimal("39.90"),
                 "https://cdn.app/pizza.png",
                 20,
-                1L
+                categoryId
         );
 
-        when(categoryService.getById(1L))
+        when(categoryService.getById(categoryId))
                 .thenReturn(category);
         when(productRepository.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -145,18 +154,21 @@ class ProductServiceTest {
         assertEquals("Pizza", result.getName()); // trim validado
         assertEquals(category, result.getCategory());
 
-        verify(categoryService, times(1)).getById(1L);
+        verify(categoryService, times(1)).getById(categoryId);
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
     void shouldUpdateProductSuccessfully() {
         // arrange
+        UUID categoryId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+        UUID productId = UUID.fromString("10101010-1010-1010-1010-101010101010");
+
         Category category = new Category();
-        category.setId(2L);
+        category.setId(categoryId);
 
         Product existingProduct = new Product();
-        existingProduct.setId(10L);
+        existingProduct.setId(productId);
         existingProduct.setName("Pizza velha");
 
         ProductRequestDTO dto = new ProductRequestDTO(
@@ -165,50 +177,53 @@ class ProductServiceTest {
                 new BigDecimal("42.90"),
                 "https://cdn.app/pizza-nova.png",
                 25,
-                2L
+                categoryId
         );
 
-        when(categoryService.getById(2L))
+        when(categoryService.getById(categoryId))
                 .thenReturn(category);
-        when(productRepository.findById(10L))
+        when(productRepository.findById(productId))
                 .thenReturn(Optional.of(existingProduct));
         when(productRepository.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // act
-        Product result = service.update(10L, dto);
+        Product result = service.update(productId, dto);
 
         // assert
         assertNotNull(result);
         assertEquals("Pizza nova", result.getName()); // trim validado
         assertEquals(category, result.getCategory());
 
-        verify(categoryService, times(1)).getById(2L);
-        verify(productRepository, times(1)).findById(10L);
+        verify(categoryService, times(1)).getById(categoryId);
+        verify(productRepository, times(1)).findById(productId);
         verify(productRepository, times(1)).save(existingProduct);
     }
 
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistingProduct() {
         // arrange
+        UUID categoryId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        UUID nonExistingProductId = UUID.fromString("99999999-9999-9999-9999-999999999999");
+
         ProductRequestDTO dto = new ProductRequestDTO(
                 "Produto",
                 "Desc",
                 new BigDecimal("10.00"),
                 null,
                 5,
-                1L
+                categoryId
         );
 
-        when(categoryService.getById(1L))
+        when(categoryService.getById(categoryId))
                 .thenReturn(new Category());
-        when(productRepository.findById(99L))
+        when(productRepository.findById(nonExistingProductId))
                 .thenReturn(Optional.empty());
 
         // act + assert
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
-                () -> service.update(99L, dto)
+                () -> service.update(nonExistingProductId, dto)
         );
 
         assertEquals(
@@ -221,11 +236,13 @@ class ProductServiceTest {
 
     @Test
     void shouldDeleteProductById() {
+        UUID idToDelete = UUID.fromString("51111111-1111-1111-1111-111111111111");
+
         // act
-        service.delete(5L);
+        service.delete(idToDelete);
 
         // assert
-        verify(productRepository, times(1)).deleteById(5L);
+        verify(productRepository, times(1)).deleteById(idToDelete);
     }
 
 }

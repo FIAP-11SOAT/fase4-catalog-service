@@ -35,7 +35,7 @@ public class CatalogStepDefs {
 
     @Given("a valid category id")
     public void valid_category_id() {
-        this.categoryId = "4";
+        this.categoryId = "44444444-4444-4444-4444-444444444444";
     }
 
     @When("a GET request is sent to {string}")

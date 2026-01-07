@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -60,7 +61,7 @@ class ProductFunctionalTest {
     void shouldListAllProductsByCategory() throws Exception {
 
         // act
-        MvcResult result = mockMvc.perform(get("/products?category=4"))
+        MvcResult result = mockMvc.perform(get("/products?category=44444444-4444-4444-4444-444444444444"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -87,7 +88,7 @@ class ProductFunctionalTest {
                 BigDecimal.valueOf(29.99),
                 "",
                 10,
-                1L
+                UUID.fromString("11111111-1111-1111-1111-111111111111")
         );
         String jsonBody = objectMapper.writeValueAsString(request);
 
@@ -105,6 +106,6 @@ class ProductFunctionalTest {
                         new TypeReference<ProductResponseDTO>() {}
                 );
 
-        assertEquals(9, response.id());
+        assertEquals("Lanche", response.category());
     }
 }

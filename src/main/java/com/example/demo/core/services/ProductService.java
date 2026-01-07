@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ProductService implements ProductServicePort {
@@ -25,7 +26,7 @@ public class ProductService implements ProductServicePort {
     }
 
     @Override
-    public List<Product> getAll(Long categoryId) {
+    public List<Product> getAll(UUID categoryId) {
 
         if (categoryId != null){
             Category category = categoryService.getById(categoryId);
@@ -35,7 +36,7 @@ public class ProductService implements ProductServicePort {
     }
 
     @Override
-    public Product getById(Long id) {
+    public Product getById(UUID id) {
         Optional<Product> product = productRepository.findById(id);
         return product.orElse(null);
     }
@@ -48,7 +49,7 @@ public class ProductService implements ProductServicePort {
     }
 
     @Override
-    public Product update(Long id, ProductRequestDTO productRequestDTO) {
+    public Product update(UUID id, ProductRequestDTO productRequestDTO) {
         Category category = categoryService.getById(productRequestDTO.categoryId());
         Product product = getById(id);
         if (product == null){
@@ -59,7 +60,7 @@ public class ProductService implements ProductServicePort {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         productRepository.deleteById(id);
     }
 
