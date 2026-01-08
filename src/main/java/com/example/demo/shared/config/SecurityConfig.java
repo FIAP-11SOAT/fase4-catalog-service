@@ -30,7 +30,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        /*
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/products/**")
@@ -45,6 +44,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/health"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -64,17 +65,6 @@ public class SecurityConfig {
                             );
                             new ObjectMapper().writeValue(response.getOutputStream(), errorResponse);
                         })
-                )
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
-
-        return http.build();
-
-         */
-
-        http
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
