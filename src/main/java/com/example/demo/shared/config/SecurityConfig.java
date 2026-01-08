@@ -44,6 +44,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/health"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

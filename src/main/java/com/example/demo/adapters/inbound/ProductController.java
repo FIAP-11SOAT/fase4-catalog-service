@@ -27,7 +27,6 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMERS', 'EMPLOYEES')")
     @GetMapping("")
     public ResponseEntity<List<ProductResponseDTO>> getAll(@RequestParam(required = false) UUID category){
         List<Product> products = productService.getAll(category);
@@ -35,7 +34,6 @@ public class ProductController {
         return ResponseEntity.ok(productsResponse);
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMERS', 'EMPLOYEES')")
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getById(@PathVariable UUID id){
         Product product = productService.getById(id);
@@ -50,7 +48,7 @@ public class ProductController {
             summary = "Criar produto",
             description = "Requer role EMPLOYEES"
     )
-    @PreAuthorize("hasRole('EMPLOYEES')")
+   @PreAuthorize("hasRole('EMPLOYEES')")
     @PostMapping("")
     public ResponseEntity<ProductResponseDTO> create(@RequestBody @Valid ProductRequestDTO productRequestDTO){
         Product product = productService.create(productRequestDTO);
