@@ -22,7 +22,7 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMERS', 'EMPLOYEES')")
+    //@PreAuthorize("hasAnyRole('CUSTOMERS', 'EMPLOYEES')")
     @GetMapping("")
     public ResponseEntity<List<CategoryResponseDTO>> get(){
         List<Category> categories = categoryService.getAll();
